@@ -36,6 +36,9 @@ import createEmotionCache from '../utility/createEmotionCache';
 import lightTheme from '../styles/themes/lightTheme';
 import '../styles/globals.css';
 
+import { useEffect, useState } from 'react';
+import { Workbox } from 'workbox-window';
+
 const clientSideEmotionCache = createEmotionCache();
 
 const drawerWidth = 240;
@@ -92,6 +95,52 @@ const MyApp = (props) => {
     setOpen(!open);
   };
 
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      const wb = new Workbox('/sw.js');
+
+      const refreshPage = () => {
+        wb.addEventListener('controlling', (event) => {
+          window.location.reload();
+        });
+
+        wb.messageSkipWaiting();
+      };
+
+      const Msg = () => (
+        <div>
+          Updated app is available&nbsp;&nbsp;
+          <button onClick={refreshPage}>Reload</button>
+        </div>
+      );
+
+      const showSkipWaitingPrompt = (event) => {
+        toast.info(<Msg />);
+      };
+
+      wb.addEventListener('waiting', showSkipWaitingPrompt);
+
+      wb.addEventListener('message', (event) => {
+        if (!event.data) {
+          return;
+        }
+        if (event.data.type === 'REPLAY_COMPLETED') {
+          toast.success(
+            'Your feedback was sent after the connection is restored'
+          );
+        }
+        if (event.data.type === 'REQUEST_FAILED') {
+          toast.warning(
+            'Your feedback will be sent after the connection is restored'
+          );
+        }
+      });
+
+      wb.register();
+    }
+  }, []);
+
+
   return (
     <CacheProvider value={emotionCache}>
       <ThemeProvider theme={lightTheme}>
@@ -124,7 +173,7 @@ const MyApp = (props) => {
                 noWrap
                 sx={{ flexGrow: 1 }}
               >
-                Web Push Guide
+                Push.Foo
               </Typography>
               <IconButton color="inherit">
                 <Badge badgeContent={4} color="secondary">

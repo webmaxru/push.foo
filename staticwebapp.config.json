@@ -1,0 +1,64 @@
+{
+    "routes": [
+      {
+        "route": "/account",
+        "allowedRoles": ["authenticated"]
+      },
+      {
+        "route": "/admin/*",
+        "allowedRoles": ["administrator"]
+      },
+      {
+        "route": "/images/*",
+        "headers": {
+          "cache-control": "must-revalidate, max-age=15770000"
+        }
+      },
+      {
+        "route": "/login-account",
+        "rewrite": "/.auth/login/twitter?post_login_redirect_uri=/account"
+      },
+      {
+        "route": "/login-twitter",
+        "rewrite": "/.auth/login/twitter"
+      },
+      {
+        "route": "/.auth/login/aad",
+        "statusCode": 404
+      },
+      {
+        "route": "/logout",
+        "redirect": "/.auth/logout?post_logout_redirect_uri=/about"
+      },
+      {
+        "route": "/aboutme",
+        "redirect": "/about",
+        "statusCode": 301
+      }
+    ],
+    "navigationFallback": {
+      "rewrite": "index.html",
+      "exclude": ["/images/*.{png,jpg,gif}", "/static/*"]
+    },
+    "responseOverrides": {
+      "400": {
+        "rewrite": "/400.html"
+      },
+      "401": {
+        "redirect": "/login",
+        "statusCode": 302
+      },
+      "403": {
+        "rewrite": "/400.html"
+      },
+      "404": {
+        "rewrite": "/404.html"
+      }
+    },
+    "globalHeaders": {
+      "X-Powered-By": "Maxim Salnikov and Azure Static Web Apps"
+    },
+    "mimeTypes": {
+      ".json": "text/json"
+    }
+  }

@@ -1,0 +1,28 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "post"
+      ],
+      "route": "subscription"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "out",
+      "name": "outputDocument",
+      "databaseName": "push-foo-db",
+      "collectionName": "subscriptions",
+      "createIfNotExists": true,
+      "connectionStringSetting": "pushfoodbaccount_DOCUMENTDB"
+    }
+  ]
+}
