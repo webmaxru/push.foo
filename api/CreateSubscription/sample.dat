@@ -1,5 +1,5 @@
 {
-    subscriptionObject: {
+    "subscriptionObject": {
         "endpoint": "https://wns2-ln2p.notify.windows.com/w/?token=BQYAAADN1ZpH8mwS98DRTS22yZEA4pS3It1ZJdAJKoEvog1fZT57pL%2bsdzcFQjhuGHJfy7WjZyFa2cYWBGvO4T1jV2lQdxGMuCa6l1gFuMRIT%2bwPmv4ZB9l%2f9chEySWXb%2f5KmfEHwTLRU2qRPUZjl6wJ%2b%2f%2f8q%2fBy2YPAfxdcnZbBU%2fTC1ovhpPl0skSqK0Ze5gwTXo6CHFW4kTFGcmlBf5AxbZpJYBjl9qftp%2fuJNloCJ52ysxsQ%2bmqjhzlFCskIJ5AF5ZQ5IV2TyUeT34Ho6bCy7eAteqctzwiJNFv5jbSJ3mfxqcMBWEc%2bGZm1Wu6UUpUdFDNxddGoyk5i6ocgPKtOFys1",
         "expirationTime": null,
         "keys": {
@@ -7,5 +7,5 @@
             "auth": "lZ0gGQ7oL-50zRapGyFl9g"
         }
     },
-    meta: null
+    "meta": null
 }

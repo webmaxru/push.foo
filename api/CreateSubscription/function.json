@@ -24,5 +24,6 @@
       "createIfNotExists": true,
       "connectionStringSetting": "pushfoodbaccount_DOCUMENTDB"
     }
-  ]
+  ],
+  "scriptFile": "./index.js"
 }

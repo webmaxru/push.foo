@@ -42,6 +42,7 @@ setCacheNameDetails({ precache: 'wb6-precache', runtime: 'wb6-runtime' });
 // NAVIGATION ROUTING
 
 // This assumes /index.html has been precached.
+/*
 const navHandler = createHandlerBoundToURL('/index.html');
 const navigationRoute = new NavigationRoute(navHandler, {
   denylist: [
@@ -57,7 +58,7 @@ const navigationRoute = new NavigationRoute(navHandler, {
   ], // Also might be specified explicitly via allowlist
 });
 registerRoute(navigationRoute);
-
+*/
 // STATIC RESOURCES
 
 googleFontsCache({ cachePrefix: 'wb6-gfonts' });
