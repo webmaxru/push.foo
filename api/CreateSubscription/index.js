@@ -1,14 +1,14 @@
 const appInsights = require('applicationinsights');
 appInsights.setup();
 const client = appInsights.defaultClient;
-import { v5 as uuidv5 } from 'uuid';
+const { v5: uuidv5 } = require('uuid');
 
 module.exports = async function (context, req) {
   var operationIdOverride = {
     'ai.operation.id': context.traceContext.traceparent,
   };
 
-  if (!req.body || !('subscriptionObject' in req.body) ) {
+  if (!req.body || !('subscriptionObject' in req.body)) {
     client.trackException({
       exception: new Error('No required parameter!'),
       tagOverrides: operationIdOverride,
@@ -30,24 +30,27 @@ module.exports = async function (context, req) {
   }
 
   const timestamp = Math.floor(Date.now() / 1);
+  const id = uuidv5(req.body.subscriptionObject.endpoint, uuidv5.URL);
 
   context.bindings.outputDocument = JSON.stringify({
-    id: uuidv5(req.body.subscriptionObject.endpoint, uuidv5.URL),
+    id: id,
     timestamp: timestamp,
   });
 
   client.trackEvent({
-    name: 'feedback_save',
+    name: 'subscription_create_success',
     tagOverrides: operationIdOverride,
     properties: {
+      id: id,
       timestamp: timestamp,
     },
   });
 
   context.res = {
     body: {
-      message: 'Thank you!',
+      message: 'subscription_create_success',
       clientPrincipal: clientPrincipal,
+      id: id,
     },
   };
 };
