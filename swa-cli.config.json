@@ -1,13 +1,13 @@
 {
   "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
   "configurations": {
-    "bpm-counter": {
+    "push.foo": {
       "appLocation": ".",
       "apiLocation": "api",
       "outputLocation": "out",
       "appBuildCommand": "npm run build",
       "apiBuildCommand": "npm run build --if-present",
-      "run": "npm start",
+      "run": "serve",
       "appDevserverUrl": "http://localhost:3000"
     }
   }

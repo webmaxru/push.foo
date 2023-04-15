@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "applicationinsights": "^2.3.5",
-    "uuid": "^9.0.0"
+    "web-push": "^3.5.0"
   }
 }

@@ -7,5 +7,27 @@
             "auth": "aPzudNNGAfQwyavjI2ipSg"
         }
     },
+    "notification": {
+        "title": "Custom title",
+        "actions": [
+            {
+                "action": "action_custom",
+                "title": "Custom action"
+            }
+        ],
+        "body": "Custom text",
+        "dir": "auto",
+        "icon": "https://push.foo/images/icons/android-chrome-192x192.png",
+        "badge": "https://push.foo/images/icons/android-chrome-192x192.png",
+        "lang": "en-US",
+        "renotify": "true",
+        "requireInteraction": "true",
+        "tag": "tag",
+        "vibrate": [
+            300,
+            100,
+            400
+        ]
+    },
     "meta": null
 }

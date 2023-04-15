@@ -31,6 +31,8 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Copyright from '../src/Copyright';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import createEmotionCache from '../utility/createEmotionCache';
 import lightTheme from '../styles/themes/lightTheme';
@@ -272,6 +274,7 @@ const MyApp = (props) => {
             </Container>
           </Box>
         </Box>
+        <ToastContainer />
       </ThemeProvider>
     </CacheProvider>
   );

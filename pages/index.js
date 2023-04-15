@@ -6,7 +6,7 @@ import * as React from 'react';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import ProTip from '../src/ProTip';
+import Subscription from '../src/Subscription';
 import Link from '../src/Link';
 
 export default function Index() {
@@ -19,7 +19,7 @@ export default function Index() {
         <Link href="/about" color="secondary">
           Go to the about page
         </Link>
-        <ProTip />
+        <Subscription VAPID_PUBLIC_KEY="BDweuGCGNzjleeyQYPvtFLEbMG4BX9rc_M9Abtx16NvaR_Jpo5i08WAJUll2Hn6ZiErbSjkzxWdpKjus_qO2cMw" />
       </Box>
     </Container>
   );

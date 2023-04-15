@@ -1,14 +1,12 @@
+const utils = require('../Shared/utils');
 const appInsights = require('applicationinsights');
 appInsights.setup();
 const client = appInsights.defaultClient;
-const { v5: uuidv5 } = require('uuid');
 
 module.exports = async function (context, req) {
-  var operationIdOverride = {
-    'ai.operation.id': context.traceContext.traceparent,
-  };
+  let operationIdOverride = utils.getOperationIdOverride(context);
 
-  if (!req.body || !('subscriptionObject' in req.body)) {
+  if (!req.body || !('pushSubscription' in req.body)) {
     client.trackException({
       exception: new Error('No required parameter!'),
       tagOverrides: operationIdOverride,
@@ -18,23 +16,15 @@ module.exports = async function (context, req) {
     context.done();
   }
 
-  let clientPrincipal = {};
-
-  try {
-    const header = req.headers['x-ms-client-principal'];
-    const encoded = Buffer.from(header, 'base64');
-    const decoded = encoded.toString('ascii');
-    clientPrincipal = JSON.parse(decoded);
-  } catch (err) {
-    context.log(`${err.name}: ${err.message}`);
-  }
+  let clientPrincipal = utils.getClientPrincipal(req);
 
   const timestamp = Math.floor(Date.now() / 1);
-  const id = uuidv5(req.body.subscriptionObject.endpoint, uuidv5.URL);
+  const id = utils.getEndpointHash(req.body.pushSubscription.endpoint);
 
   context.bindings.outputDocument = JSON.stringify({
     id: id,
     timestamp: timestamp,
+    pushSubscription: pushSubscription
   });
 
   client.trackEvent({

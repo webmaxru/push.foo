@@ -95,30 +95,36 @@ const bgSyncPlugin = new BackgroundSyncPlugin('feedbackQueue', {
   },
 });
 
-
 // ALL OTHER EVENTS
 
 // Receive push and show a notification
-self.addEventListener('push', function(event) {
+self.addEventListener('push', (event) => {
   console.log('[Service Worker]: Received push event', event);
 
-  var notificationData = {};
-
   if (event.data.json()) {
-    notificationData = event.data.json().notification;
+    notificationData = event.data.json();
   } else {
     notificationData = {
-      title: 'Something Has Happened',
-      message: 'Something you might want to check out',
-      icon: '/assets/images/logo.png'
+      title: 'No data from server',
+      message: 'Displaying default notification',
+      icon: 'https://push.foo/images/icons/android-chrome-192x192.png',
+      badge: 'https://push.foo/images/icons/android-chrome-192x192.png',
     };
   }
 
-  self.registration.showNotification(notificationData.title, notificationData);
+  console.log('[Service Worker]: notificationData', notificationData);
+
+  const showNotificationPromise = self.registration.showNotification(
+    notificationData.title,
+    notificationData
+  );
+  const promiseChain = Promise.all([showNotificationPromise]);
+
+  event.waitUntil(promiseChain);
 });
 
 // Custom notification actions
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', (event) => {
   console.log('[Service Worker]: Received notificationclick event');
 
   event.notification.close();
@@ -127,7 +133,7 @@ self.addEventListener('notificationclick', function(event) {
     console.log('[Service Worker]: Performing action opentweet');
 
     event.waitUntil(
-      clients.openWindow(event.notification.data).then(function(windowClient) {
+      clients.openWindow(event.notification.data).then(function (windowClient) {
         // do something with the windowClient.
       })
     );
@@ -140,9 +146,9 @@ self.addEventListener('notificationclick', function(event) {
       clients
         .matchAll({
           includeUncontrolled: true,
-          type: 'window'
+          type: 'window',
         })
-        .then(function(clientList) {
+        .then(function (clientList) {
           for (var i = 0; i < clientList.length; i++) {
             var client = clientList[i];
             if (client.url == '/' && 'focus' in client) return client.focus();
@@ -154,7 +160,7 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 // Closing notification action
-self.addEventListener('notificationclose', function(event) {
+self.addEventListener('notificationclose', (event) => {
   log('[Service Worker]: Received notificationclose event');
 });
 
