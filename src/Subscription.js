@@ -3,7 +3,7 @@ import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
-import { urlBase64ToUint8Array } from './utility/pushHelpers';
+import { urlBase64ToUint8Array } from './utility/pushHelpers.js';
 
 export default function Subscription(props) {
   const swScope = './';
@@ -35,7 +35,7 @@ export default function Subscription(props) {
             applicationServerKey: convertedVapidKey,
           })
           .then((pushSubscription) => {
-            console.log(`${pushSubscription.toJSON()}`);
+            console.log(`${pushSubscription ? pushSubscription.toJSON() : null}`);
           });
       })
       .catch((err) => {
@@ -68,6 +68,8 @@ export default function Subscription(props) {
       <Button variant="contained" onClick={subscribe}>
         Subscribe
       </Button>
+
+      &nbsp;
 
       <Button variant="contained" onClick={unsubscribe}>
         Unsubscribe
