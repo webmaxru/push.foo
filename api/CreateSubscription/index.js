@@ -16,15 +16,19 @@ module.exports = async function (context, req) {
     context.done();
   }
 
+  let tags = req.body.tags || [];
+  let pushSubscription = req.body.pushSubscription;
+
   let clientPrincipal = utils.getClientPrincipal(req);
 
   const timestamp = Math.floor(Date.now() / 1);
-  const id = utils.getEndpointHash(req.body.pushSubscription.endpoint);
+  const id = utils.getEndpointHash(pushSubscription.endpoint);
 
   context.bindings.outputDocument = JSON.stringify({
     id: id,
     timestamp: timestamp,
-    pushSubscription: req.body.pushSubscription
+    pushSubscription: pushSubscription,
+    tags: tags,
   });
 
   client.trackEvent({
@@ -33,6 +37,8 @@ module.exports = async function (context, req) {
     properties: {
       id: id,
       timestamp: timestamp,
+      pushSubscription: pushSubscription,
+      tags: tags,
     },
   });
 
@@ -41,6 +47,8 @@ module.exports = async function (context, req) {
       message: 'subscription_create_success',
       clientPrincipal: clientPrincipal,
       id: id,
+      pushSubscription: pushSubscription,
+      tags: tags,
     },
   };
 };

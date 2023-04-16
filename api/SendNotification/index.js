@@ -4,25 +4,6 @@ appInsights.setup();
 const client = appInsights.defaultClient;
 const webPush = require('web-push');
 
-const defaultNotification = {
-  title: 'Default title',
-  actions: [
-    {
-      action: 'action_default',
-      title: 'Default action',
-    },
-  ],
-  body: 'Default text',
-  dir: 'auto',
-  icon: 'https://push.foo/images/icons/android-chrome-192x192.png',
-  badge: 'https://push.foo/images/icons/android-chrome-192x192.png',
-  lang: 'en-US',
-  renotify: true,
-  requireInteraction: true,
-  tag: 'tag',
-  vibrate: [300, 100, 400],
-};
-
 module.exports = async function (context, req) {
   let operationIdOverride = utils.getOperationIdOverride(context);
 
@@ -43,21 +24,15 @@ module.exports = async function (context, req) {
   );
 
   let pushSubscription = req.body.pushSubscription;
-  let notification = req.body.notification || defaultNotification;
+  let notification = req.body.notification || utils.defaultNotification;
 
-  context.log('pushSubscription:');
-  context.log(pushSubscription);
-
-  context.log('notification:');
-  context.log(notification);
-
-  let clientPrincipal = utils.getClientPrincipal(req);
+  context.log('pushSubscription:',pushSubscription);
+  context.log('notification:',notification);
 
   await webPush
     .sendNotification(pushSubscription, JSON.stringify(notification))
     .then((response) => {
-      context.log('Push sent');
-      context.log(response);
+      context.log('Push sent. Response:',response);
 
       client.trackEvent({
         name: 'notification_send_success',
@@ -77,15 +52,13 @@ module.exports = async function (context, req) {
       };
     })
     .catch((error) => {
-      context.log('Push error');
-      context.log(error)
+      context.log('Push send error:', error);
 
       client.trackEvent({
         name: 'notification_send_error',
         tagOverrides: operationIdOverride,
         properties: {
           pushSubscription: pushSubscription,
-          notification: notification,
           error: error,
         },
       });

@@ -7,6 +7,7 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "@azure/cosmos": "^3.17.3",
     "applicationinsights": "^2.3.5",
     "web-push": "^3.5.0"
   }
