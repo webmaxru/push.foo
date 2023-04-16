@@ -92,10 +92,12 @@ const Drawer = styled(MuiDrawer, {
 const MyApp = (props) => {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
 
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   const toggleDrawer = () => {
     setOpen(!open);
   };
+
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -123,6 +125,8 @@ const MyApp = (props) => {
       wb.addEventListener('waiting', showSkipWaitingPrompt);
 
       wb.addEventListener('message', (event) => {
+        console.log('[App] Message received from the service worker')
+
         if (!event.data) {
           return;
         }
@@ -136,12 +140,17 @@ const MyApp = (props) => {
             'Your feedback will be sent after the connection is restored'
           );
         }
+        if (event.data.type === 'NOTIFICATION_RECEIVED') {
+          
+          setNotificationCount(notificationCount + 1);
+
+          console.log(`Notification counter: ${notificationCount}`)
+        }
       });
 
       wb.register();
     }
   }, []);
-
 
   return (
     <CacheProvider value={emotionCache}>
@@ -178,7 +187,7 @@ const MyApp = (props) => {
                 Push.Foo
               </Typography>
               <IconButton color="inherit">
-                <Badge badgeContent={4} color="secondary">
+                <Badge badgeContent={notificationCount} color="secondary">
                   <NotificationsIcon />
                 </Badge>
               </IconButton>

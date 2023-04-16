@@ -3,7 +3,7 @@ import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
-import { urlBase64ToUint8Array } from './utility/pushHelpers.js';
+import { urlBase64ToUint8Array } from './shared/pushHelpers';
 
 export default function Subscription(props) {
   const swScope = './';

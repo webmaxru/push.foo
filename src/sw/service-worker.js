@@ -9,6 +9,9 @@ import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import * as googleAnalytics from 'workbox-google-analytics';
 
 async function messageClient(event, messageType) {
+
+  console.log('[Service Worker]: Sending message to app', messageType);
+
   if (!event.clientId) return;
 
   // Get the client.
@@ -21,6 +24,8 @@ async function messageClient(event, messageType) {
   client.postMessage({
     type: messageType,
   });
+
+  console.log('[Service Worker]: Sent message to app', client);
 }
 
 // SETTINGS
@@ -101,9 +106,12 @@ const bgSyncPlugin = new BackgroundSyncPlugin('feedbackQueue', {
 self.addEventListener('push', (event) => {
   console.log('[Service Worker]: Received push event', event);
 
-  if (event.data.json()) {
+  let notificationData = {};
+
+  try {
     notificationData = event.data.json();
-  } else {
+  } catch (error) {
+    console.error('[Service Worker]: Error parsing notification data', error);
     notificationData = {
       title: 'No data from server',
       message: 'Displaying default notification',
@@ -119,6 +127,8 @@ self.addEventListener('push', (event) => {
     notificationData
   );
   const promiseChain = Promise.all([showNotificationPromise]);
+
+  messageClient(event, 'NOTIFICATION_RECEIVED');
 
   event.waitUntil(promiseChain);
 });

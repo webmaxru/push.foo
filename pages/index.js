@@ -14,12 +14,12 @@ export default function Index() {
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Next.js example
+          Instant push example
         </Typography>
-        <Link href="/about" color="secondary">
-          Go to the about page
-        </Link>
         <Subscription VAPID_PUBLIC_KEY="BDweuGCGNzjleeyQYPvtFLEbMG4BX9rc_M9Abtx16NvaR_Jpo5i08WAJUll2Hn6ZiErbSjkzxWdpKjus_qO2cMw" />
+        <Link href="/about" color="secondary">
+          About the project
+        </Link>
       </Box>
     </Container>
   );
