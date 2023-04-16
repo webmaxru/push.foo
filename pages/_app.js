@@ -99,6 +99,10 @@ const MyApp = (props) => {
 
   const [notificationCount, setNotificationCount] = useState(0);
 
+  const resetNotificationCount = () => {
+    setNotificationCount(0);
+  };
+
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       const wb = new Workbox('/sw.js');
@@ -125,7 +129,7 @@ const MyApp = (props) => {
       wb.addEventListener('waiting', showSkipWaitingPrompt);
 
       wb.addEventListener('message', (event) => {
-        console.log('[App] Message received from the service worker')
+        console.log('[App] Message received from the service worker');
 
         if (!event.data) {
           return;
@@ -141,10 +145,7 @@ const MyApp = (props) => {
           );
         }
         if (event.data.type === 'NOTIFICATION_RECEIVED') {
-          
-          setNotificationCount(notificationCount + 1);
-
-          console.log(`Notification counter: ${notificationCount}`)
+          setNotificationCount((notificationCount) => notificationCount + 1);
         }
       });
 
@@ -186,7 +187,7 @@ const MyApp = (props) => {
               >
                 Push.Foo
               </Typography>
-              <IconButton color="inherit">
+              <IconButton color="inherit" onClick={resetNotificationCount}>
                 <Badge badgeContent={notificationCount} color="secondary">
                   <NotificationsIcon />
                 </Badge>

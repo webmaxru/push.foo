@@ -9,6 +9,7 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
+          <title>Push.Foo - Web Push API Playground</title>
           {/* PWA primary color */}
           <meta name="theme-color" content={lightTheme.palette.primary.main} />
           <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" />

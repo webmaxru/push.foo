@@ -1,0 +1,12 @@
+{
+  "web_apps": [
+    {
+      "manifest": "https://push.foo/app.webmanifest",
+      "details": {
+        "paths": [
+          "/*"
+        ]
+      }
+    }
+  ]
+}

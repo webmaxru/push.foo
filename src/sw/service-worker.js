@@ -9,23 +9,25 @@ import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import * as googleAnalytics from 'workbox-google-analytics';
 
 async function messageClient(event, messageType) {
-
   console.log('[Service Worker]: Sending message to app', messageType);
 
-  if (!event.clientId) return;
-
-  // Get the client.
-  const client = await clients.get(event.clientId);
-  // Exit early if we don't get the client.
-  // Eg, if it closed.
-  if (!client) return;
-
-  // Send a message to the client.
-  client.postMessage({
+  let message = {
     type: messageType,
-  });
+  };
 
-  console.log('[Service Worker]: Sent message to app', client);
+  if (!event.clientId) {
+    const clients = await self.clients.matchAll({ type: 'window' });
+    for (const client of clients) {
+      client.postMessage(message);
+      console.log('[Service Worker]: Sent message to app', client);
+    }
+  } else {
+    const client = await clients.get(event.clientId);
+    if (!client) return;
+
+    client.postMessage(message);
+    console.log('[Service Worker]: Sent message to app', client);
+  }
 }
 
 // SETTINGS
@@ -122,13 +124,13 @@ self.addEventListener('push', (event) => {
 
   console.log('[Service Worker]: notificationData', notificationData);
 
+  const messageClientPromise = messageClient(event, 'NOTIFICATION_RECEIVED');
+
   const showNotificationPromise = self.registration.showNotification(
     notificationData.title,
     notificationData
   );
-  const promiseChain = Promise.all([showNotificationPromise]);
-
-  messageClient(event, 'NOTIFICATION_RECEIVED');
+  const promiseChain = Promise.all([messageClientPromise,showNotificationPromise]);
 
   event.waitUntil(promiseChain);
 });

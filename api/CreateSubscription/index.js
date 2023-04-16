@@ -24,7 +24,7 @@ module.exports = async function (context, req) {
   context.bindings.outputDocument = JSON.stringify({
     id: id,
     timestamp: timestamp,
-    pushSubscription: pushSubscription
+    pushSubscription: req.body.pushSubscription
   });
 
   client.trackEvent({

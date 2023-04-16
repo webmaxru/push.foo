@@ -9,7 +9,10 @@ import Box from '@mui/material/Box';
 import Subscription from '../src/Subscription';
 import Link from '../src/Link';
 
-export default function Index() {
+export default function Index(props) {
+
+  console.log('Component props', props)
+  
   return (
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>

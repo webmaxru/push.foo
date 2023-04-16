@@ -34,3 +34,5 @@ yarn-error.log*
 .vercel
 
 __azurite*
+__blobstorage__
+__blobstorage__
