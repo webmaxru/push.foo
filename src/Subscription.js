@@ -10,7 +10,7 @@ import Axios from 'axios';
 import { toast } from 'react-toastify';
 
 const axios = Axios.create({
-  baseURL: 'http://localhost:7071/api/',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
 });
 
 configure({
@@ -37,10 +37,6 @@ export default function Subscription(props) {
     getVapidPublicKey,
   ] = useAxios('/vapid-public-key');
 
-  useEffect(() => {
-    toast.success('Success reading VAPID public key');
-  }, [getVapidPublicKeyData]);
-
   const [
     {
       data: saveSubscriptionData,
@@ -56,10 +52,6 @@ export default function Subscription(props) {
     { manual: true }
   );
 
-  useEffect(() => {
-    toast.success('Success saving subscription on server');
-  }, [saveSubscriptionData]);
-
   const [
     {
       data: sendNotificationData,
@@ -74,10 +66,6 @@ export default function Subscription(props) {
     },
     { manual: true }
   );
-
-  useEffect(() => {
-    toast.success('Success sending notification');
-  }, [sendNotificationData]);
 
   useEffect(() => {
     getExistingSubscription();
@@ -97,8 +85,10 @@ export default function Subscription(props) {
             applicationServerKey: convertedVapidKey,
           })
           .then((pushSubscription) => {
+            setPushSubscription(pushSubscription);
             console.log(
-              `${pushSubscription ? pushSubscription.toJSON() : null}`
+              '[App] Push subscription successful:',
+              pushSubscription.toJSON()
             );
           });
       })
@@ -115,10 +105,11 @@ export default function Subscription(props) {
           pushSubscription
             .unsubscribe()
             .then((success) => {
+              setPushSubscription(null);
               console.log('[App] Unsubscription successful', success);
             })
-            .catch((err) => {
-              console.log('[App] Unsubscription failed', err);
+            .catch((error) => {
+              console.log('[App] Unsubscription failed', error);
             });
         });
       })
@@ -132,8 +123,7 @@ export default function Subscription(props) {
       .getRegistration(swScope)
       .then((registration) => {
         registration.pushManager.getSubscription().then((pushSubscription) => {
-          console.log(`Existing subscription found:`);
-          console.log(pushSubscription);
+          console.log('[App] Existing subscription found:', pushSubscription);
           setPushSubscription(pushSubscription);
 
           return pushSubscription;
@@ -147,7 +137,13 @@ export default function Subscription(props) {
   const saveSubscription = () => {
     executeSaveSubscription({
       data: { pushSubscription: pushSubscription },
-    });
+    })
+    .then(() => {
+        toast.success('Success saving subsription on backend');
+      })
+      .catch(() => {
+        toast.error('Error saving subsription on backend');
+      });;
   };
 
   const sendNotification = () => {
@@ -173,7 +169,13 @@ export default function Subscription(props) {
           vibrate: [300, 100, 400],
         },
       },
-    });
+    })
+      .then(() => {
+        toast.success('Success sending notification');
+      })
+      .catch(() => {
+        toast.error('Error sending notification');
+      });
   };
 
   return (
@@ -182,14 +184,26 @@ export default function Subscription(props) {
       {getVapidPublicKeyLoading
         ? 'Loading...'
         : getVapidPublicKeyData?.['vapid-public-key']}
-      <Button variant="contained" onClick={subscribe}>
+      <Button
+        variant="contained"
+        onClick={subscribe}
+        disabled={pushSubscription}
+      >
         Subscribe
       </Button>
       &nbsp;
-      <Button variant="contained" onClick={unsubscribe} disabled={!pushSubscription}>
+      <Button
+        variant="contained"
+        onClick={unsubscribe}
+        disabled={!pushSubscription}
+      >
         Unsubscribe
       </Button>
-      <Button variant="contained" onClick={sendNotification} disabled={!pushSubscription}>
+      <Button
+        variant="contained"
+        onClick={sendNotification}
+        disabled={!pushSubscription}
+      >
         Send notification
       </Button>
       &nbsp;
@@ -200,7 +214,11 @@ export default function Subscription(props) {
       </Button>
       <br />
       <br />
-      <Button variant="contained" onClick={saveSubscription}>
+      <Button
+        variant="contained"
+        onClick={saveSubscription}
+        disabled={!pushSubscription}
+      >
         Save subscription in the backend
       </Button>
       {saveSubscriptionData ? <h4>{saveSubscriptionData?.id}</h4> : null}
