@@ -11,10 +11,10 @@ module.exports = async function (context, req) {
   if (
     !req.body ||
     !(
-      ('subscriptionIds' in req.body &&
+      (req.body.subscriptionIds &&
         Array.isArray(req.body.subscriptionIds) &&
         req.body.subscriptionIds.length) ||
-      'tag' in req.body
+      req.body.tag
     )
   ) {
     client.trackException({

@@ -6,7 +6,7 @@ const client = appInsights.defaultClient;
 module.exports = async function (context, req) {
   let operationIdOverride = utils.getOperationIdOverride(context);
 
-  if (!req.body || !('pushSubscription' in req.body)) {
+  if (!req.body || !req.body.pushSubscription) {
     client.trackException({
       exception: new Error('No required parameter!'),
       tagOverrides: operationIdOverride,

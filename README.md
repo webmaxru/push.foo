@@ -3,7 +3,7 @@
 Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification.
 
 <p align="center">
-    <img src="public/images/social.jpg" width="300">
+    <img src="public/images/social.png" width="300">
 </p>
 
 This is a 2-in-1 project:
