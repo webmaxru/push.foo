@@ -41,6 +41,11 @@ import '../styles/globals.css';
 import { useEffect, useState } from 'react';
 import { Workbox } from 'workbox-window';
 
+import ReactGA from 'react-ga4';
+
+ReactGA.initialize('G-PDX2BC4971');
+ReactGA.send('pageview');
+
 const clientSideEmotionCache = createEmotionCache();
 
 const drawerWidth = 240;

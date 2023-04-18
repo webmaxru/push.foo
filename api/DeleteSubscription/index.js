@@ -2,11 +2,13 @@ const utils = require('../Shared/utils');
 const appInsights = require('applicationinsights');
 appInsights.setup();
 const client = appInsights.defaultClient;
+const webPush = require('web-push');
+const { CosmosClient } = require('@azure/cosmos');
 
 module.exports = async function (context, req) {
   let operationIdOverride = utils.getOperationIdOverride(context);
 
-  if (!req.body || !('pushSubscription' in req.body)) {
+  if (!req.query.subscriptionId) {
     client.trackException({
       exception: new Error('No required parameter!'),
       tagOverrides: operationIdOverride,
@@ -16,60 +18,51 @@ module.exports = async function (context, req) {
     context.done();
   }
 
-  let tags = req.body.tags || [];
-  let pushSubscription = req.body.pushSubscription;
+  subscriptionId = req.query.subscriptionId;
+  context.log('subscriptionId', subscriptionId);
 
-  let clientPrincipal = utils.getClientPrincipal(req);
+  const dbClient = new CosmosClient(process.env.pushfoodbaccount_DOCUMENTDB);
+  const { database } = await dbClient.databases.createIfNotExists({
+    id: 'push-foo-db',
+  });
+  const { container } = await database.containers.createIfNotExists({
+    id: 'subscriptions',
+  });
 
-  const timestamp = Math.floor(Date.now() / 1);
-  const subscriptionId = utils.getEndpointHash(pushSubscription.endpoint);
-
+  // const { resource: readDoc } = await item.read();
+  
   try {
-    context.bindings.outputDocument = JSON.stringify({
-      id: subscriptionId,
-      timestamp: timestamp,
-      pushSubscription: pushSubscription,
-      tags: tags,
-    });
+    await container.item(subscriptionId, subscriptionId).delete();
 
     client.trackEvent({
-      name: 'subscription_create_success',
+      name: 'subscription_delete_success',
       tagOverrides: operationIdOverride,
       properties: {
         subscriptionId: subscriptionId,
-        timestamp: timestamp,
-        pushSubscription: pushSubscription,
-        tags: tags,
       },
     });
 
     context.res = {
       body: {
-        message: 'subscription_create_success',
+        message: 'subscription_delete_success',
         subscriptionId: subscriptionId,
-        pushSubscription: pushSubscription,
-        tags: tags,
       },
     };
   } catch (error) {
-    context.log('Subscription create error:', error);
+    context.log('Subscription delete error:', error);
 
     client.trackException({
       exception: new Error(error),
       tagOverrides: operationIdOverride,
       properties: {
         subscriptionId: subscriptionId,
-        pushSubscription: pushSubscription,
-        tags: tags,
       },
     });
 
     context.res = {
       body: {
-        message: 'subscription_create_error',
+        message: 'subscription_delete_error',
         subscriptionId: subscriptionId,
-        pushSubscription: pushSubscription,
-        tags: tags,
       },
     };
   }

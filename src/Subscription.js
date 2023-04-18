@@ -8,6 +8,7 @@ import useAxios from 'axios-hooks';
 import { configure } from 'axios-hooks';
 import Axios from 'axios';
 import { toast } from 'react-toastify';
+import ReactGA from 'react-ga4';
 
 const axios = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -16,7 +17,7 @@ const axios = Axios.create({
 configure({
   axios,
   defaultOptions: {
-    manual: false,
+    manual: true,
     useCache: false,
     ssr: false,
     autoCancel: true,
@@ -48,30 +49,47 @@ export default function Subscription(props) {
     {
       url: 'subscription',
       method: 'POST',
-    },
-    { manual: true }
+    }
   );
 
   const [
     {
-      data: sendNotificationData,
-      loading: sendNotificationLoading,
-      error: sendNotificationError,
+      data: deleteSubscriptionData,
+      loading: deleteSubscriptionLoading,
+      error: deleteSubscriptionError,
     },
-    executeSendNotification,
+    executeDeleteSubscription,
   ] = useAxios(
     {
-      url: 'notification',
-      method: 'POST',
+      url: 'subscription',
+      method: 'DELETE',
+    }
+  );
+
+  const [
+    {
+      data: sendQuickNotificationData,
+      loading: sendQuickNotificationLoading,
+      error: sendQuickNotificationError,
     },
-    { manual: true }
+    executeSendQuickNotification,
+  ] = useAxios(
+    {
+      url: 'quick-notification',
+      method: 'POST',
+    }
   );
 
   useEffect(() => {
     getExistingSubscription();
+    getVapidPublicKey();
   }, []);
 
   const subscribe = () => {
+
+    ReactGA.event('subscribe', {
+    });
+
     let convertedVapidKey = urlBase64ToUint8Array(
       getVapidPublicKeyData['vapid-public-key']
     );
@@ -139,15 +157,27 @@ export default function Subscription(props) {
       data: { pushSubscription: pushSubscription },
     })
     .then(() => {
-        toast.success('Success saving subsription on backend');
+        toast.success('Success saving subscription on backend');
       })
       .catch(() => {
-        toast.error('Error saving subsription on backend');
+        toast.error('Error saving subscription on backend');
       });;
   };
 
-  const sendNotification = () => {
-    executeSendNotification({
+  const deleteSubscription = () => {
+    executeDeleteSubscription({
+      params: { subscriptionId: saveSubscriptionData?.subscriptionId },
+    })
+    .then(() => {
+        toast.success('Success deleting subscription from backend');
+      })
+      .catch(() => {
+        toast.error('Error deleting subscription from backend');
+      });;
+  };
+
+  const sendQuickNotification = () => {
+    executeSendQuickNotification({
       data: {
         pushSubscription: pushSubscription,
         notification: {
@@ -160,8 +190,8 @@ export default function Subscription(props) {
           ],
           body: 'Custom text',
           dir: 'auto',
-          icon: 'https://push.foo/images/icons/android-chrome-192x192.png',
-          badge: 'https://push.foo/images/icons/android-chrome-192x192.png',
+          icon: 'https://push.foo/images/logo.png',
+          badge: 'https://push.foo/images/logo.jpg',
           lang: 'en-US',
           renotify: 'true',
           requireInteraction: 'true',
@@ -201,10 +231,10 @@ export default function Subscription(props) {
       </Button>
       <Button
         variant="contained"
-        onClick={sendNotification}
+        onClick={sendQuickNotification}
         disabled={!pushSubscription}
       >
-        Send notification
+        Send quick notification
       </Button>
       &nbsp;
       <br />
@@ -221,7 +251,16 @@ export default function Subscription(props) {
       >
         Save subscription in the backend
       </Button>
-      {saveSubscriptionData ? <h4>{saveSubscriptionData?.id}</h4> : null}
+      <br />
+      <br />
+      <Button
+        variant="contained"
+        onClick={deleteSubscription}
+        disabled={!saveSubscriptionData?.subscriptionId}
+      >
+        Delete subscription from the backend
+      </Button>
+      {saveSubscriptionData ? <h4>Subscription ID:{saveSubscriptionData?.subscriptionId}</h4> : null}
     </Typography>
   );
 }

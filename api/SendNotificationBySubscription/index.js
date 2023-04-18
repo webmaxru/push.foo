@@ -46,27 +46,26 @@ module.exports = async function (context, req) {
         body: {
           message: 'notification_send_success',
           pushSubscription: pushSubscription,
-          notification: notification,
-          response: response
+          notification: notification
         },
       };
     })
     .catch((error) => {
       context.log('Push send error:', error);
 
-      client.trackEvent({
-        name: 'notification_send_error',
+      client.trackException({
+        exception: new Error(error),
         tagOverrides: operationIdOverride,
         properties: {
-          pushSubscription: pushSubscription,
-          error: error,
+          pushSubscription: pushSubscription
         },
       });
 
       context.res = {
         body: {
           message: 'notification_send_error',
-          error: error,
+          pushSubscription: pushSubscription,
+          notification: notification
         },
       };
     });

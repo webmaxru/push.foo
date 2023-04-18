@@ -1,12 +1,6 @@
 {
-    "pushSubscription": {
-        "endpoint": "https://wns2-ln2p.notify.windows.com/w/?token=BQYAAABK1RBn%2bN3Ttaqg4Ac0mUOiCfNU094rxS5tS1DD8k8DNq0vfzDINdjlRmvLkTTvHJN2L1p9zUKKjscKzR0MhdeEgg8qf7tdWCrN4CSXm8lVsHy7cZPrahmDBo4TsWu2WiKj0MF6DWO7%2fVswcnR7vukKEvsctt37XOWq9rCmB5LX4nBiK8mO9s8%2bUygKpfo2EUrgPs2qiTTd%2fdFJDbY6XdUgQfuhGRWSpTS0jB87rQFZ4rpybpl3nZGTjMmiQ4u3dU%2fkX9fhN8G4MFfY3EN10nx0KbO08RffIyzxe7737wGXvUJhMj7sTgbgYN3SF4MoSdqx7FiIjKxzfS3ciH5dYne5",
-        "expirationTime": null,
-        "keys": {
-            "p256dh": "BOs7z_NYqJqVS_RMlVcbPtrKgjWHHFAVC5GmjLNtDII1ctGnIl2Ke8vjF5GxJ7mzUbOj3vwDvRBOATjXT1Yma6c",
-            "auth": "aPzudNNGAfQwyavjI2ipSg"
-        }
-    },
+    "subscriptionIds": ["4228b480","443387f7","a7c50b6d","4","5","6"],
+    "tag": "demo",
     "notification": {
         "title": "Custom title",
         "actions": [
@@ -17,8 +11,8 @@
         ],
         "body": "Custom text",
         "dir": "auto",
-        "icon": "https://push.foo/images/icons/android-chrome-192x192.png",
-        "badge": "https://push.foo/images/icons/android-chrome-192x192.png",
+        "icon": "https://push.foo/images/logo.png",
+        "badge": "https://push.foo/images/logo.jpg",
         "lang": "en-US",
         "renotify": "true",
         "requireInteraction": "true",

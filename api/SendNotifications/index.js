@@ -10,9 +10,12 @@ module.exports = async function (context, req) {
 
   if (
     !req.body ||
-    !('subscriptionIds' in req.body) ||
-    !Array.isArray(req.body.subscriptionIds) ||
-    !req.body.subscriptionIds.length
+    !(
+      ('subscriptionIds' in req.body &&
+        Array.isArray(req.body.subscriptionIds) &&
+        req.body.subscriptionIds.length) ||
+      'tag' in req.body
+    )
   ) {
     client.trackException({
       exception: new Error('No required parameter!'),
@@ -23,7 +26,7 @@ module.exports = async function (context, req) {
     context.done();
   }
 
-  tag = req.body.tag || null;
+  const sendLimit = 5; // Max 5 subscriptions
 
   const dbClient = new CosmosClient(process.env.pushfoodbaccount_DOCUMENTDB);
   const { database } = await dbClient.databases.createIfNotExists({
@@ -36,8 +39,11 @@ module.exports = async function (context, req) {
   let notification = req.body.notification || utils.defaultNotification;
   context.log('notification:', notification);
 
-  let subscriptionIds = req.body.subscriptionIds.slice(0, 5); // Max 5 subscriptions
+  let subscriptionIds = req.body.subscriptionIds || [];
   context.log('Number of subscriptions:', subscriptionIds.length);
+
+  tag = req.body.tag || null;
+  context.log('tag:', tag);
 
   webPush.setVapidDetails(
     'mailto:salnikov@gmail.com',
@@ -45,32 +51,41 @@ module.exports = async function (context, req) {
     process.env.VAPID_PRIVATE_KEY
   );
 
-  let i = 0;
+  let queryParams = [];
+  let query = 'SELECT * from c WHERE ';
+  let queryWhereParts = [];
 
-  let queryParams = subscriptionIds.map((id) => {
-    i++;
+  if (subscriptionIds.length) {
+    let i = 0;
+    queryParams = subscriptionIds.map((id) => {
+      i++;
 
-    return {
-      name: '@subscriptionId' + i,
-      value: id,
-    };
-  });
+      return {
+        name: '@subscriptionId' + i,
+        value: id,
+      };
+    });
 
-  let subscriptionIdsParamNames = queryParams
-    .map((param) => {
-      return param.name;
-    })
-    .join();
+    let subscriptionIdsParamNames = queryParams
+      .map((param) => param.name)
+      .join();
 
-  let query = `SELECT * from c WHERE c.id IN (${subscriptionIdsParamNames})`;
+    queryWhereParts.push(`c.id IN (${subscriptionIdsParamNames})`);
+  }
 
   if (tag) {
-    query += ' AND ARRAY_CONTAINS(c.tags,@tag)';
     queryParams.push({
       name: '@tag',
       value: tag,
     });
+
+    queryWhereParts.push(`ARRAY_CONTAINS(c.tags,@tag)`);
   }
+
+  query +=
+    queryWhereParts.join(' OR ') +
+    ' ORDER BY c.timestamp DESC OFFSET 0 LIMIT ' +
+    sendLimit;
 
   let paramQuery = {
     query: query,
@@ -84,11 +99,22 @@ module.exports = async function (context, req) {
   context.log('resources count:', resources.length);
 
   let promiseStack = [];
+  let sentSubscriptionIds = [];
+
+  class ReadableError extends Error {
+    toJSON() {
+      return JSON.stringify({
+        message: this.message,
+      });
+    }
+  }
 
   for (const subscription of resources) {
     let pushSubscription = subscription.pushSubscription;
 
     context.log('pushSubscription:', pushSubscription);
+
+    sentSubscriptionIds.push(subscription.id);
 
     promiseStack.push(
       webPush
@@ -103,27 +129,46 @@ module.exports = async function (context, req) {
               pushSubscription: pushSubscription,
             },
           });
+
+          return subscription.id;
         })
         .catch((error) => {
           context.log('Push send error:', error);
 
-          client.trackEvent({
-            name: 'notification_send_error',
+          client.trackException({
+            exception: new Error(error),
             tagOverrides: operationIdOverride,
             properties: {
               pushSubscription: pushSubscription,
-              error: error,
             },
           });
+
+          return Promise.reject(
+            new ReadableError(subscription.id + ': ' + error)
+          );
         })
     );
   }
 
   await Promise.allSettled(promiseStack).then((results) => {
+    const fulfilled = results
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => result.value);
+
+    const rejected = results
+      .filter((result) => result.status === 'rejected')
+      .map((result) => {
+        return result.reason.message;
+      });
+
     context.res = {
       body: {
-        message: 'notifications_send_success',
+        message: 'notifications_send_complete',
         subscriptionIds: subscriptionIds,
+        sentSubscriptionIds: sentSubscriptionIds,
+        sendSuccess: fulfilled,
+        sendError: rejected,
+        tag: tag,
         notification: notification,
       },
     };

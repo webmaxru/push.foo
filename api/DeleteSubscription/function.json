@@ -6,9 +6,9 @@
       "direction": "in",
       "name": "req",
       "methods": [
-        "post"
+        "delete"
       ],
-      "route": "notification"
+      "route": "subscription"
     },
     {
       "type": "http",

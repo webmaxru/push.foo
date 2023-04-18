@@ -1,3 +1,21 @@
+# Push.Foo - Push.Foo - Web Push API Playground
+
+Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification.
+
+<p align="center">
+    <img src="public/images/social.jpg" width="300">
+</p>
+
+This is a 2-in-1 project:
+
+1. A real product for developers to help with understanding how Web Push API works.
+2. A real-world demo and a playground for [Web Push API](https://www.w3.org/TR/push-api/).
+3. Proof of concept for a Progressive Web App (PWA) driven by Workbox-powered service worker.
+
+### Web application (installable, offline-ready)
+
+[Push.Foo](https://push.foo) - Web Push API Playground
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
@@ -32,3 +50,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## About
+
+### Author
+
+[Maxim Salnikov](https://twitter.com/webmaxru). Feel free to contact me if you have any questions about the project, PWA, Web Push, etc.
