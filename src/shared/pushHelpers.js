@@ -11,4 +11,24 @@ export const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
-export default { urlBase64ToUint8Array };
+export const defaultNotification = {
+  title: 'Push.Foo Notification Title',
+  actions: [
+    {
+      action: 'action_custom',
+      title: 'Custom action',
+    },
+  ],
+  body: 'Test notification body',
+  dir: 'auto',
+  image: 'https://push.foo/images/social.png',
+  icon: 'https://push.foo/images/logo.jpg',
+  badge: 'https://push.foo/images/logo-mask.png',
+  lang: 'en-US',
+  renotify: 'true',
+  requireInteraction: 'true',
+  tag: 'tag',
+  vibrate: [300, 100, 400],
+}
+
+export default { urlBase64ToUint8Array, defaultNotification };

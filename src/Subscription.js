@@ -3,12 +3,55 @@ import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
-import { urlBase64ToUint8Array } from './shared/pushHelpers';
+import TextField from '@mui/material/TextField';
+import { urlBase64ToUint8Array, defaultNotification } from './shared/pushHelpers';
 import useAxios from 'axios-hooks';
 import { configure } from 'axios-hooks';
 import Axios from 'axios';
 import { toast } from 'react-toastify';
 import ReactGA from 'react-ga4';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  setIsFeatureAvailable,
+  setPushSubscription,
+  setSubscriptionId,
+  selectIsFeatureAvailable,
+  selectPushSubscription,
+  selectSubscriptionId,
+} from '../store/subscriptionSlice';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+
+const saveSubscriptionValidationSchema = yup.object({
+  tag: yup
+    .string('Enter the tag for the subscription')
+    .max(20, 'Tag should be of maximum 20 characters length'),
+});
+
+const notificationValidationSchema = yup.object({
+  title: yup
+    .string('Enter notification title')
+    .max(256, 'Title should be of maximum 256 characters length')
+    .required('Title is required'),
+  body: yup
+    .string('Enter notification body text')
+    .max(512, 'Body text should be of maximum 512 characters length')
+    .required('Body text is required'),
+  image: yup
+    .string('Enter notification image url')
+    .url('This should be a valid url'),
+});
+
+const sendNotificationValidationSchema = yup.object({
+  subscriptionIds: yup
+    .string('Enter comma-separated subscription IDs')
+    .email('Enter a valid email')
+    .required('Email is required'),
+  tag: yup
+    .string('Enter the tag for the subscription')
+    .max(20, 'Tag should be of maximum 20 characters length')
+    .required('Tag is required'),
+});
 
 const axios = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -25,9 +68,32 @@ configure({
 });
 
 export default function Subscription(props) {
-  const swScope = './';
+  const dispatch = useDispatch();
+  const isFeatureAvailable = useSelector(selectIsFeatureAvailable);
+  const pushSubscription = useSelector(selectPushSubscription);
+  const subscriptionId = useSelector(selectSubscriptionId);
 
-  const [pushSubscription, setPushSubscription] = useState();
+  const saveSubscriptionFormik = useFormik({
+    initialValues: {
+      tag: '',
+    },
+    validationSchema: saveSubscriptionValidationSchema,
+    onSubmit: (values) => {
+      saveSubscription(values.tag);
+    },
+  });
+
+  const notificationFormik = useFormik({
+    initialValues: {
+      title: 'Hello from Push.Foo',
+      body: 'This is a test notification',
+      image: 'https://push.foo/images/social.png',
+    },
+    validationSchema: notificationValidationSchema,
+    onSubmit: (values) => {
+      sendQuickNotification(values);
+    },
+  });
 
   const [
     {
@@ -45,12 +111,14 @@ export default function Subscription(props) {
       error: saveSubscriptionError,
     },
     executeSaveSubscription,
-  ] = useAxios(
-    {
-      url: 'subscription',
-      method: 'POST',
-    }
-  );
+  ] = useAxios({
+    url: 'subscription',
+    method: 'POST',
+  });
+
+  useEffect(() => {
+    dispatch(setSubscriptionId(saveSubscriptionData?.subscriptionId));
+  }, [saveSubscriptionData]);
 
   const [
     {
@@ -59,12 +127,14 @@ export default function Subscription(props) {
       error: deleteSubscriptionError,
     },
     executeDeleteSubscription,
-  ] = useAxios(
-    {
-      url: 'subscription',
-      method: 'DELETE',
-    }
-  );
+  ] = useAxios({
+    url: 'subscription',
+    method: 'DELETE',
+  });
+
+  useEffect(() => {
+    dispatch(setSubscriptionId(null));
+  }, [deleteSubscriptionData]);
 
   const [
     {
@@ -73,29 +143,30 @@ export default function Subscription(props) {
       error: sendQuickNotificationError,
     },
     executeSendQuickNotification,
-  ] = useAxios(
-    {
-      url: 'quick-notification',
-      method: 'POST',
-    }
-  );
+  ] = useAxios({
+    url: 'quick-notification',
+    method: 'POST',
+  });
 
   useEffect(() => {
-    getExistingSubscription();
-    getVapidPublicKey();
+    if ('PushManager' in window) {
+      dispatch(setIsFeatureAvailable(true));
+      getVapidPublicKey();
+      getExistingSubscription();
+    } else {
+      dispatch(setIsFeatureAvailable(false));
+    }
   }, []);
 
   const subscribe = () => {
-
-    ReactGA.event('subscribe', {
-    });
+    ReactGA.event('subscribe', {});
 
     let convertedVapidKey = urlBase64ToUint8Array(
       getVapidPublicKeyData['vapid-public-key']
     );
 
-    navigator['serviceWorker']
-      .getRegistration(swScope)
+    navigator.serviceWorker
+      .getRegistration(process.env.NEXT_PUBLIC_SW_SCOPE)
       .then((registration) => {
         registration.pushManager
           .subscribe({
@@ -103,7 +174,7 @@ export default function Subscription(props) {
             applicationServerKey: convertedVapidKey,
           })
           .then((pushSubscription) => {
-            setPushSubscription(pushSubscription);
+            dispatch(setPushSubscription(pushSubscription.toJSON()));
             console.log(
               '[App] Push subscription successful:',
               pushSubscription.toJSON()
@@ -116,14 +187,14 @@ export default function Subscription(props) {
   };
 
   const unsubscribe = () => {
-    navigator['serviceWorker']
-      .getRegistration(swScope)
+    navigator.serviceWorker
+      .getRegistration(process.env.NEXT_PUBLIC_SW_SCOPE)
       .then((registration) => {
         registration.pushManager.getSubscription().then((pushSubscription) => {
           pushSubscription
             .unsubscribe()
             .then((success) => {
-              setPushSubscription(null);
+              dispatch(setPushSubscription(null));
               console.log('[App] Unsubscription successful', success);
             })
             .catch((error) => {
@@ -137,12 +208,11 @@ export default function Subscription(props) {
   };
 
   const getExistingSubscription = () => {
-    navigator['serviceWorker']
-      .getRegistration(swScope)
+    navigator.serviceWorker.ready
       .then((registration) => {
         registration.pushManager.getSubscription().then((pushSubscription) => {
           console.log('[App] Existing subscription found:', pushSubscription);
-          setPushSubscription(pushSubscription);
+          dispatch(setPushSubscription(pushSubscription?.toJSON()));
 
           return pushSubscription;
         });
@@ -152,52 +222,40 @@ export default function Subscription(props) {
       });
   };
 
-  const saveSubscription = () => {
+  const saveSubscription = (tag) => {
     executeSaveSubscription({
-      data: { pushSubscription: pushSubscription },
+      data: { pushSubscription: pushSubscription, tags: [tag] },
     })
-    .then(() => {
+      .then(() => {
         toast.success('Success saving subscription on backend');
       })
       .catch(() => {
         toast.error('Error saving subscription on backend');
-      });;
+      });
   };
 
   const deleteSubscription = () => {
     executeDeleteSubscription({
       params: { subscriptionId: saveSubscriptionData?.subscriptionId },
     })
-    .then(() => {
+      .then(() => {
         toast.success('Success deleting subscription from backend');
       })
       .catch(() => {
         toast.error('Error deleting subscription from backend');
-      });;
+      });
   };
 
-  const sendQuickNotification = () => {
+  const sendQuickNotification = (values) => {
+    let notification = defaultNotification;
+    notification.title = values.title;
+    notification.body = values.body;
+    notification.image = values.image;
+
     executeSendQuickNotification({
       data: {
         pushSubscription: pushSubscription,
-        notification: {
-          title: 'Custom title from app',
-          actions: [
-            {
-              action: 'action_custom',
-              title: 'Custom action',
-            },
-          ],
-          body: 'Custom text',
-          dir: 'auto',
-          icon: 'https://push.foo/images/logo.png',
-          badge: 'https://push.foo/images/logo.jpg',
-          lang: 'en-US',
-          renotify: 'true',
-          requireInteraction: 'true',
-          tag: 'tag',
-          vibrate: [300, 100, 400],
-        },
+        notification: notification,
       },
     })
       .then(() => {
@@ -208,59 +266,158 @@ export default function Subscription(props) {
       });
   };
 
+
   return (
-    <Typography sx={{ mt: 6, mb: 3 }} color="text.secondary">
-      VAPID Public Key{' '}
-      {getVapidPublicKeyLoading
-        ? 'Loading...'
-        : getVapidPublicKeyData?.['vapid-public-key']}
-      <Button
-        variant="contained"
-        onClick={subscribe}
-        disabled={pushSubscription}
-      >
-        Subscribe
-      </Button>
-      &nbsp;
-      <Button
-        variant="contained"
-        onClick={unsubscribe}
-        disabled={!pushSubscription}
-      >
-        Unsubscribe
-      </Button>
-      <Button
-        variant="contained"
-        onClick={sendQuickNotification}
-        disabled={!pushSubscription}
-      >
-        Send quick notification
-      </Button>
-      &nbsp;
-      <br />
-      <br />
-      <Button variant="contained" onClick={getVapidPublicKey}>
-        Re-read VAPID public key
-      </Button>
-      <br />
-      <br />
-      <Button
-        variant="contained"
-        onClick={saveSubscription}
-        disabled={!pushSubscription}
-      >
-        Save subscription in the backend
-      </Button>
-      <br />
-      <br />
-      <Button
-        variant="contained"
-        onClick={deleteSubscription}
-        disabled={!saveSubscriptionData?.subscriptionId}
-      >
-        Delete subscription from the backend
-      </Button>
-      {saveSubscriptionData ? <h4>Subscription ID:{saveSubscriptionData?.subscriptionId}</h4> : null}
-    </Typography>
+    <>
+      {isFeatureAvailable ? (
+        <>
+          <Typography variant="h4" gutterBottom>
+            Instant push notification
+          </Typography>
+
+          <Typography variant="body1" gutterBottom color="text.secondary">
+            Test how the Web Push notification looks like on this device
+          </Typography>
+
+          <Button
+            variant="contained"
+            onClick={subscribe}
+            disabled={pushSubscription ? true : false}
+            fullWidth
+            sx={{ mb: 3 }}
+          >
+            1. Subscribe this device {pushSubscription ? '(subscribed)' : ''}
+          </Button>
+
+          <form onSubmit={notificationFormik.handleSubmit}>
+            <TextField
+              disabled={!pushSubscription ? true : false}
+              fullWidth
+              id="title"
+              name="title"
+              label="Notification title"
+              type="text"
+              value={notificationFormik.values.title}
+              onChange={notificationFormik.handleChange}
+              error={
+                notificationFormik.touched.title &&
+                Boolean(notificationFormik.errors.title)
+              }
+              helperText={
+                notificationFormik.touched.title &&
+                notificationFormik.errors.title
+              }
+              size="small"
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              disabled={!pushSubscription ? true : false}
+              fullWidth
+              id="body"
+              name="body"
+              label="Notification body text"
+              type="text"
+              value={notificationFormik.values.body}
+              onChange={notificationFormik.handleChange}
+              error={
+                notificationFormik.touched.body &&
+                Boolean(notificationFormik.errors.body)
+              }
+              helperText={
+                notificationFormik.touched.body &&
+                notificationFormik.errors.body
+              }
+              size="small"
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              disabled={!pushSubscription ? true : false}
+              fullWidth
+              id="image"
+              name="image"
+              label="Notification image"
+              type="text"
+              value={notificationFormik.values.image}
+              onChange={notificationFormik.handleChange}
+              error={
+                notificationFormik.touched.image &&
+                Boolean(notificationFormik.errors.image)
+              }
+              helperText={
+                notificationFormik.touched.image &&
+                notificationFormik.errors.image
+              }
+              size="small"
+              sx={{ mb: 2 }}
+            />
+            <Button
+              variant="contained"
+              fullWidth
+              type="submit"
+              disabled={!pushSubscription ? true : false}
+              sx={{ mb: 3 }}
+            >
+              2. Send notification here
+            </Button>
+          </form>
+
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={unsubscribe}
+            disabled={!pushSubscription ? true : false}
+          >
+            3. (Optional) Unsubscribe
+          </Button>
+          <br />
+          <br />
+          <form onSubmit={saveSubscriptionFormik.handleSubmit}>
+            <TextField
+              disabled={!pushSubscription ? true : false}
+              fullWidth
+              id="tag"
+              name="tag"
+              label="Tag (optional). For example, you can use your email here"
+              type="text"
+              value={saveSubscriptionFormik.values.tag}
+              onChange={saveSubscriptionFormik.handleChange}
+              error={
+                saveSubscriptionFormik.touched.tag &&
+                Boolean(saveSubscriptionFormik.errors.tag)
+              }
+              helperText={
+                saveSubscriptionFormik.touched.tag &&
+                saveSubscriptionFormik.errors.tag
+              }
+              title="You can send notifications to multiple devices by the subscription IDs or this tag"
+            />
+            <Button
+              variant="contained"
+              fullWidth
+              type="submit"
+              disabled={!pushSubscription ? true : false}
+            >
+              {saveSubscriptionData
+                ? 'Update subscription on the backend'
+                : 'Save subscription to the backend'}
+            </Button>
+          </form>
+          <br />
+          <br />
+          <Button
+            variant="contained"
+            onClick={deleteSubscription}
+            disabled={!subscriptionId ? true : false}
+          >
+            Delete subscription from the backend
+          </Button>
+          {saveSubscriptionData ? (
+            <h4>Subscription ID:{subscriptionId}</h4>
+          ) : null}
+        </>
+      ) : (
+        <>Web Push API is not available in your browser</>
+      )}
+    </>
   );
 }

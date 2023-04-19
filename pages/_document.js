@@ -9,18 +9,13 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          <meta charset="utf-8" />
+          <meta charSet="utf-8" />
 
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Push.Foo - Web Push API Playground</title>
           {/* PWA primary color */}
           <meta
             name="description"
             content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
           />
-
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
           <meta name="theme-color" content={lightTheme.palette.primary.main} />
           <link
             rel="apple-touch-icon"
@@ -75,6 +70,8 @@ export default class MyDocument extends Document {
             name="twitter:image"
             content="https://push.foo/images/social.png"
           />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
           <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
