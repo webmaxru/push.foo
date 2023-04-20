@@ -4,7 +4,17 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { urlBase64ToUint8Array, defaultNotification } from './shared/pushHelpers';
+import Divider from '@mui/material/Divider';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import {
+  urlBase64ToUint8Array,
+  defaultNotification,
+} from './shared/pushHelpers';
 import useAxios from 'axios-hooks';
 import { configure } from 'axios-hooks';
 import Axios from 'axios';
@@ -21,6 +31,23 @@ import {
 } from '../store/subscriptionSlice';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import ProTip from '../src/ProTip';
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const saveSubscriptionValidationSchema = yup.object({
   tag: yup
@@ -40,17 +67,14 @@ const notificationValidationSchema = yup.object({
   image: yup
     .string('Enter notification image url')
     .url('This should be a valid url'),
+  icon: yup
+    .string('Enter notification icon url')
+    .url('This should be a valid url'),
 });
 
 const sendNotificationValidationSchema = yup.object({
-  subscriptionIds: yup
-    .string('Enter comma-separated subscription IDs')
-    .email('Enter a valid email')
-    .required('Email is required'),
-  tag: yup
-    .string('Enter the tag for the subscription')
-    .max(20, 'Tag should be of maximum 20 characters length')
-    .required('Tag is required'),
+  subscriptionIds: yup.string('Enter comma-separated subscription IDs'),
+  tag: yup.string('Enter the tag for the subscription'),
 });
 
 const axios = Axios.create({
@@ -73,6 +97,18 @@ export default function Subscription(props) {
   const pushSubscription = useSelector(selectPushSubscription);
   const subscriptionId = useSelector(selectSubscriptionId);
 
+  const [notificationModeState, setNotificationModeState] = useState(null);
+
+  const [sendTabValue, setSendTabValue] = React.useState(0);
+
+  const handleSendTabValueChange = (event, newValue) => {
+    setSendTabValue(newValue);
+  };
+
+  const handleNotificationModeState = (mode) => {
+    setNotificationModeState(mode);
+  };
+
   const saveSubscriptionFormik = useFormik({
     initialValues: {
       tag: '',
@@ -88,10 +124,26 @@ export default function Subscription(props) {
       title: 'Hello from Push.Foo',
       body: 'This is a test notification',
       image: 'https://push.foo/images/social.png',
+      icon: 'https://push.foo/images/logo.jpg',
     },
     validationSchema: notificationValidationSchema,
     onSubmit: (values) => {
-      sendQuickNotification(values);
+      if (notificationModeState === 'quick') {
+        sendQuickNotification(values);
+      }
+      if (notificationModeState === 'multi') {
+        sendNotificationFormik.handleSubmit();
+      }
+    },
+  });
+
+  const sendNotificationFormik = useFormik({
+    initialValues: {
+      tag: '',
+    },
+    validationSchema: sendNotificationValidationSchema,
+    onSubmit: (values) => {
+      sendNotification(values);
     },
   });
 
@@ -145,6 +197,18 @@ export default function Subscription(props) {
     executeSendQuickNotification,
   ] = useAxios({
     url: 'quick-notification',
+    method: 'POST',
+  });
+
+  const [
+    {
+      data: sendNotificationData,
+      loading: sendNotificationLoading,
+      error: sendNotificationError,
+    },
+    executeSendNotification,
+  ] = useAxios({
+    url: 'notification',
     method: 'POST',
   });
 
@@ -251,6 +315,7 @@ export default function Subscription(props) {
     notification.title = values.title;
     notification.body = values.body;
     notification.image = values.image;
+    notification.icon = values.icon;
 
     executeSendQuickNotification({
       data: {
@@ -266,157 +331,351 @@ export default function Subscription(props) {
       });
   };
 
+  const sendNotification = (values) => {
+    let notification = defaultNotification;
+    notification.title = notificationFormik.values.title;
+    notification.body = notificationFormik.values.body;
+    notification.image = notificationFormik.values.image;
+    notification.icon = notificationFormik.values.icon;
+
+    executeSendNotification({
+      data: {
+        tag: values.tag,
+        subscriptionIds: values.subscriptionIds?.replace(/\s+/g, '').split(','),
+        notification: notification,
+      },
+    })
+      .then(() => {
+        toast.success('Success sending notification');
+      })
+      .catch(() => {
+        toast.error('Error sending notification');
+      });
+  };
 
   return (
     <>
+      
+      <Typography variant="h4" gutterBottom>
+        Instant push notification
+      </Typography>
+
+      <Typography variant="body1" gutterBottom color="text.secondary">
+        Test how the Web Push notification looks like on this device
+      </Typography>
+
+      <Card variant="outlined" sx={{ mb: 3 }}>
+        <CardContent>
+          {isFeatureAvailable ? (
+            <>
+              <Button
+                variant="contained"
+                onClick={subscribe}
+                disabled={pushSubscription ? true : false}
+                fullWidth
+              >
+                1. Subscribe this device{' '}
+                {pushSubscription ? '(subscribed)' : ''}
+              </Button>
+              <Typography variant="caption" display="block" sx={{ mb: 2 }}>
+                Have a look at the icon in the address bar - you might need to
+                allow notifications there
+              </Typography>
+
+              <Button
+                form="notificationForm"
+                variant="contained"
+                fullWidth
+                type="submit"
+                disabled={!pushSubscription ? true : false}
+                onClick={() => handleNotificationModeState('quick')}
+              >
+                2. Send notification here
+              </Button>
+              <Typography variant="caption" display="block" sx={{ mb: 2 }}>
+                You can change some parameters of the notification in the form
+                below
+              </Typography>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={unsubscribe}
+                disabled={!pushSubscription ? true : false}
+              >
+                3. (Optional) Unsubscribe
+              </Button>
+            </>
+          ) : (
+            <Typography variant="body1" gutterBottom color="error.main">
+              Web Push API is not available in your browser. On iOS 16.4+
+              devices, you have to "Add to Home Screen" first (in "Share" icon
+              menu).
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
+
+      <ProTip />
+
+      <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
+        Multi-device/browser push notification
+      </Typography>
+
+      <Typography variant="body1" gutterBottom color="text.secondary">
+        Register multiple devices and/or browsers and send notifications there
+      </Typography>
+
+      <Card variant="outlined" sx={{ mb: 2 }}>
+        <CardContent>
+          <Typography variant="h5" gutterBottom>
+            Send notifications to previously registered devices
+          </Typography>
+
+          <form>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs value={sendTabValue} onChange={handleSendTabValueChange}>
+                <Tab label="By subscription ID" />
+                <Tab label="By tag" />
+              </Tabs>
+            </Box>
+            <TabPanel value={sendTabValue} index={0}>
+              <TextField
+                fullWidth
+                id="subscriptionIds"
+                name="subscriptionIds"
+                label="Subscription IDs"
+                type="text"
+                value={sendNotificationFormik.values.subscriptionIds}
+                onChange={sendNotificationFormik.handleChange}
+                error={
+                  sendNotificationFormik.touched.subscriptionIds &&
+                  Boolean(sendNotificationFormik.errors.subscriptionIds)
+                }
+                helperText={
+                  sendNotificationFormik.touched.subscriptionIds &&
+                  sendNotificationFormik.errors.subscriptionIds
+                }
+                size="small"
+              />
+              <Typography variant="caption" display="block">
+                Comma separated list of subscription IDs you got after
+                registering the devices
+              </Typography>
+            </TabPanel>
+            <TabPanel value={sendTabValue} index={1}>
+              <TextField
+                fullWidth
+                id="tag"
+                name="tag"
+                label="Tag"
+                type="text"
+                value={sendNotificationFormik.values.tag}
+                onChange={sendNotificationFormik.handleChange}
+                error={
+                  sendNotificationFormik.touched.tag &&
+                  Boolean(sendNotificationFormik.errors.tag)
+                }
+                helperText={
+                  sendNotificationFormik.touched.tag &&
+                  sendNotificationFormik.errors.tag
+                }
+                size="small"
+              />
+              <Typography variant="caption" display="block">
+                Tag you used (optionally) when registered the device
+              </Typography>
+            </TabPanel>
+
+            <Button
+              form="notificationForm"
+              variant="contained"
+              fullWidth
+              type="submit"
+              onClick={() => handleNotificationModeState('multi')}
+            >
+              Send notifications
+            </Button>
+            <Typography variant="caption" display="block" sx={{ mb: 2 }}>
+              You can change some parameters of the notification in the form
+              below. Only notifications for your maximum 10 latest device
+              registrations will be sent.
+            </Typography>
+          </form>
+        </CardContent>
+      </Card>
+
       {isFeatureAvailable ? (
         <>
-          <Typography variant="h4" gutterBottom>
-            Instant push notification
+          <Card variant="outlined" sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h5" gutterBottom>
+                Register this device (optional)
+              </Typography>
+              <Typography variant="body1" gutterBottom color="text.secondary">
+                You must subscribe this device first using the instant
+                notification form above
+              </Typography>
+
+              <form onSubmit={saveSubscriptionFormik.handleSubmit}>
+                <TextField
+                  disabled={!pushSubscription ? true : false}
+                  fullWidth
+                  id="tag"
+                  name="tag"
+                  label="Tag (optional)"
+                  type="text"
+                  value={saveSubscriptionFormik.values.tag}
+                  onChange={saveSubscriptionFormik.handleChange}
+                  error={
+                    saveSubscriptionFormik.touched.tag &&
+                    Boolean(saveSubscriptionFormik.errors.tag)
+                  }
+                  helperText={
+                    saveSubscriptionFormik.touched.tag &&
+                    saveSubscriptionFormik.errors.tag
+                  }
+                  size="small"
+                />
+                <Typography variant="caption" display="block" sx={{ mb: 2 }}>
+                  Come up with "your own" tag, so no other users can send you
+                  notifications. For example, you can use your email.
+                </Typography>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  type="submit"
+                  disabled={!pushSubscription ? true : false}
+                  sx={{ mb: 3 }}
+                >
+                  {subscriptionId
+                    ? 'Update subscription on the backend'
+                    : 'Save subscription to the backend'}
+                </Button>
+              </form>
+
+              {subscriptionId ? (
+                <Typography variant="body1" color="success.main" sx={{ mb: 3 }}>
+                  You can send notifications to this device by the subscription
+                  ID <strong>{subscriptionId}</strong> and/or tag above (if you
+                  entered it before saving)
+                </Typography>
+              ) : null}
+
+              <Button
+                variant="outlined"
+                onClick={deleteSubscription}
+                disabled={!subscriptionId ? true : false}
+                fullWidth
+              >
+                Delete subscription from the backend
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Divider variant="middle" />
+
+          <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
+            Notification properties
           </Typography>
 
-          <Typography variant="body1" gutterBottom color="text.secondary">
-            Test how the Web Push notification looks like on this device
+          <Typography variant="body1" color="text.secondary">
+            These properties are in use by both instant and multi-device options
+            above
           </Typography>
 
-          <Button
-            variant="contained"
-            onClick={subscribe}
-            disabled={pushSubscription ? true : false}
-            fullWidth
-            sx={{ mb: 3 }}
-          >
-            1. Subscribe this device {pushSubscription ? '(subscribed)' : ''}
-          </Button>
-
-          <form onSubmit={notificationFormik.handleSubmit}>
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="title"
-              name="title"
-              label="Notification title"
-              type="text"
-              value={notificationFormik.values.title}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.title &&
-                Boolean(notificationFormik.errors.title)
-              }
-              helperText={
-                notificationFormik.touched.title &&
-                notificationFormik.errors.title
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="body"
-              name="body"
-              label="Notification body text"
-              type="text"
-              value={notificationFormik.values.body}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.body &&
-                Boolean(notificationFormik.errors.body)
-              }
-              helperText={
-                notificationFormik.touched.body &&
-                notificationFormik.errors.body
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="image"
-              name="image"
-              label="Notification image"
-              type="text"
-              value={notificationFormik.values.image}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.image &&
-                Boolean(notificationFormik.errors.image)
-              }
-              helperText={
-                notificationFormik.touched.image &&
-                notificationFormik.errors.image
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <Button
-              variant="contained"
-              fullWidth
-              type="submit"
-              disabled={!pushSubscription ? true : false}
-              sx={{ mb: 3 }}
-            >
-              2. Send notification here
-            </Button>
-          </form>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={unsubscribe}
-            disabled={!pushSubscription ? true : false}
-          >
-            3. (Optional) Unsubscribe
-          </Button>
-          <br />
-          <br />
-          <form onSubmit={saveSubscriptionFormik.handleSubmit}>
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="tag"
-              name="tag"
-              label="Tag (optional). For example, you can use your email here"
-              type="text"
-              value={saveSubscriptionFormik.values.tag}
-              onChange={saveSubscriptionFormik.handleChange}
-              error={
-                saveSubscriptionFormik.touched.tag &&
-                Boolean(saveSubscriptionFormik.errors.tag)
-              }
-              helperText={
-                saveSubscriptionFormik.touched.tag &&
-                saveSubscriptionFormik.errors.tag
-              }
-              title="You can send notifications to multiple devices by the subscription IDs or this tag"
-            />
-            <Button
-              variant="contained"
-              fullWidth
-              type="submit"
-              disabled={!pushSubscription ? true : false}
-            >
-              {saveSubscriptionData
-                ? 'Update subscription on the backend'
-                : 'Save subscription to the backend'}
-            </Button>
-          </form>
-          <br />
-          <br />
-          <Button
-            variant="contained"
-            onClick={deleteSubscription}
-            disabled={!subscriptionId ? true : false}
-          >
-            Delete subscription from the backend
-          </Button>
-          {saveSubscriptionData ? (
-            <h4>Subscription ID:{subscriptionId}</h4>
-          ) : null}
+          <Card variant="outlined" sx={{ mb: 3 }}>
+            <CardContent>
+              <form
+                onSubmit={notificationFormik.handleSubmit}
+                id="notificationForm"
+              >
+                <TextField
+                  disabled={!pushSubscription ? true : false}
+                  fullWidth
+                  id="title"
+                  name="title"
+                  label="Notification title"
+                  type="text"
+                  value={notificationFormik.values.title}
+                  onChange={notificationFormik.handleChange}
+                  error={
+                    notificationFormik.touched.title &&
+                    Boolean(notificationFormik.errors.title)
+                  }
+                  helperText={
+                    notificationFormik.touched.title &&
+                    notificationFormik.errors.title
+                  }
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  disabled={!pushSubscription ? true : false}
+                  fullWidth
+                  id="body"
+                  name="body"
+                  label="Body. Main text of the notification."
+                  type="text"
+                  value={notificationFormik.values.body}
+                  onChange={notificationFormik.handleChange}
+                  error={
+                    notificationFormik.touched.body &&
+                    Boolean(notificationFormik.errors.body)
+                  }
+                  helperText={
+                    notificationFormik.touched.body &&
+                    notificationFormik.errors.body
+                  }
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  disabled={!pushSubscription ? true : false}
+                  fullWidth
+                  id="image"
+                  name="image"
+                  label="Image. Main image, part of the content."
+                  type="text"
+                  value={notificationFormik.values.image}
+                  onChange={notificationFormik.handleChange}
+                  error={
+                    notificationFormik.touched.image &&
+                    Boolean(notificationFormik.errors.image)
+                  }
+                  helperText={
+                    notificationFormik.touched.image &&
+                    notificationFormik.errors.image
+                  }
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  disabled={!pushSubscription ? true : false}
+                  fullWidth
+                  id="icon"
+                  name="icon"
+                  label="Icon. Secondary image of notification."
+                  type="text"
+                  value={notificationFormik.values.icon}
+                  onChange={notificationFormik.handleChange}
+                  error={
+                    notificationFormik.touched.icon &&
+                    Boolean(notificationFormik.errors.icon)
+                  }
+                  helperText={
+                    notificationFormik.touched.icon &&
+                    notificationFormik.errors.icon
+                  }
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+              </form>
+            </CardContent>
+          </Card>
         </>
       ) : (
-        <>Web Push API is not available in your browser</>
+        <>You can not register this device for multi-device notifications.</>
       )}
     </>
   );

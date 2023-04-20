@@ -6,7 +6,7 @@ Test your Web Push API code in this sandbox that simulates the entire flow from 
     <img src="public/images/social.png" width="300">
 </p>
 
-This is a 2-in-1 project:
+This is a 3-in-1 project:
 
 1. A real product for developers to help with understanding how Web Push API works.
 2. A real-world demo and a playground for [Web Push API](https://www.w3.org/TR/push-api/).
