@@ -36,7 +36,7 @@ async function messageClient(event, messageType) {
 clientsClaim();
 
 // Use to update the app after user triggered refresh
-//self.skipWaiting();
+self.skipWaiting();
 
 // Setting custom cache names
 setCacheNameDetails({ precache: 'wb6-precache', runtime: 'wb6-runtime' });
@@ -44,12 +44,12 @@ setCacheNameDetails({ precache: 'wb6-precache', runtime: 'wb6-runtime' });
 // PRECACHING
 
 // Precache and serve resources from __WB_MANIFEST array
-// precacheAndRoute(self.__WB_MANIFEST);
+precacheAndRoute(self.__WB_MANIFEST);
 
 // NAVIGATION ROUTING
 
 // This assumes /index.html has been precached.
-/*
+
 const navHandler = createHandlerBoundToURL('/index.html');
 const navigationRoute = new NavigationRoute(navHandler, {
   denylist: [
@@ -65,7 +65,7 @@ const navigationRoute = new NavigationRoute(navHandler, {
   ], // Also might be specified explicitly via allowlist
 });
 registerRoute(navigationRoute);
-*/
+
 // STATIC RESOURCES
 
 googleFontsCache({ cachePrefix: 'wb6-gfonts' });
@@ -77,6 +77,39 @@ addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// BACKGROUND SYNC
+
+const messageAboutFailPlugin = {
+  fetchDidFail: async ({ originalRequest, request, error, event, state }) => {
+    messageClient(event, 'REQUEST_FAILED');
+  },
+};
+
+// Instantiating and configuring plugin
+const bgSyncPlugin = new BackgroundSyncPlugin('apiQueue', {
+  maxRetentionTime: 24 * 60, // Retry for max of 24 Hours (specified in minutes)
+
+  onSync: async ({ queue }) => {
+    // Run standard replay
+    await queue.replayRequests();
+
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) =>
+        client.postMessage({ type: 'REPLAY_COMPLETED' })
+      );
+    });
+  },
+});
+
+// Registering a route for retries
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/'),
+  new NetworkFirst({
+    plugins: [bgSyncPlugin, messageAboutFailPlugin],
+  }),
+  'POST'
+);
 
 // ALL OTHER EVENTS
 

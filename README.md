@@ -1,4 +1,4 @@
-# Push.Foo - Push.Foo - Web Push API Playground
+# Push.Foo - Web Push API Playground
 
 Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification.
 
