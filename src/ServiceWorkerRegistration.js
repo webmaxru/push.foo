@@ -49,12 +49,12 @@ export default function ServiceWorkerRegistration(props) {
         }
         if (event.data.type === 'REPLAY_COMPLETED') {
           toast.success(
-            'Your feedback was sent after the connection is restored'
+            'Your API call was sent after the connection is restored'
           );
         }
         if (event.data.type === 'REQUEST_FAILED') {
           toast.warning(
-            'Your feedback will be sent after the connection is restored'
+            'Your API call will be sent after the connection is restored'
           );
         }
         if (event.data.type === 'NOTIFICATION_RECEIVED') {
