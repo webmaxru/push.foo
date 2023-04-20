@@ -30,7 +30,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Copyright from '../src/Copyright';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import NotificationCount from '../src/NotificationCount';
 
@@ -217,7 +217,7 @@ const MyApp = (props) => {
               </Container>
             </Box>
           </Box>
-          <ToastContainer />
+          <ToastContainer position={toast.POSITION.BOTTOM_RIGHT}/>
         </ThemeProvider>
       </CacheProvider>
     </Provider>

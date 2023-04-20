@@ -140,6 +140,7 @@ export default function Subscription(props) {
   const sendNotificationFormik = useFormik({
     initialValues: {
       tag: '',
+      subscriptionIds: '',
     },
     validationSchema: sendNotificationValidationSchema,
     onSubmit: (values) => {
@@ -355,7 +356,6 @@ export default function Subscription(props) {
 
   return (
     <>
-      
       <Typography variant="h4" gutterBottom>
         Instant push notification
       </Typography>
@@ -675,7 +675,11 @@ export default function Subscription(props) {
           </Card>
         </>
       ) : (
-        <>You can not register this device for multi-device notifications.</>
+        <Typography variant="body1" gutterBottom>
+          You can not register this device/browser for receiving notifications.
+          But you can send notifications to your other registered
+          devices/browsers from here.
+        </Typography>
       )}
     </>
   );
