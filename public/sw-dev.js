@@ -5153,7 +5153,7 @@
     // PRECACHING
 
     // Precache and serve resources from __WB_MANIFEST array
-    // precacheAndRoute([{"revision":"5e49ceec735076545c43a42023673a08","url":"favicon.ico"},{"revision":"36d437370da0ab79d5afc2006b07ca56","url":"index.html"},{"revision":"a14956cc84fd9b783d92b71dca89a00f","url":"_next/static/chunks/477-ea135b47f31861b2.js"},{"revision":"16d28cfc653e2b9ea1a83a227f362b96","url":"_next/static/chunks/651.243d23442247d286.js"},{"revision":"e759d76ab5d40cb0b539e0cea0d541df","url":"_next/static/chunks/881-d4bef78f26d6a293.js"},{"revision":"4328303147a9363db368b17367be6c71","url":"_next/static/chunks/framework-91d7f78b5b4003c8.js"},{"revision":"840ca8f03bf096096001bffa57bda8d5","url":"_next/static/chunks/main-59f1ed9830ced99b.js"},{"revision":"d062fd9778e2b4eedb339a95c2cf7b02","url":"_next/static/chunks/pages/_app-6b68bfdf645272a6.js"},{"revision":"5550b4d816995db480a998749c9d2bbd","url":"_next/static/chunks/pages/_error-2f883067a14f4c4a.js"},{"revision":"583caded18e8a34ec4a73236df5e69de","url":"_next/static/chunks/pages/about-20ef142ba32f464b.js"},{"revision":"c0e919330ab58557425232257eb438b3","url":"_next/static/chunks/pages/index-3e1d8f396c1f9bf3.js"},{"revision":"99442aec5788bccac9b2f0ead2afdd6b","url":"_next/static/chunks/polyfills-5cd94c89d3acac5f.js"},{"revision":"5be7aa340afa4c1f5622795261b79488","url":"_next/static/chunks/webpack-971289bb40b46ced.js"},{"revision":"bc48c216363e9cb88963e6819e4b6a16","url":"_next/static/css/9bb3644d39976582.css"},{"revision":"aad52d05170a3edad9f063dde29a883c","url":"_next/static/OogXmxdon-Ep41slTwhLt/_buildManifest.js"},{"revision":"7c3f7e060745668041278118c0bb3d6d","url":"_next/static/OogXmxdon-Ep41slTwhLt/_middlewareManifest.js"},{"revision":"b6652df95db52feb4daf4eca35380933","url":"_next/static/OogXmxdon-Ep41slTwhLt/_ssgManifest.js"},{"revision":"d40d1e56c345d341176137806546ffb9","url":"app.webmanifest"}]);
+    // precacheAndRoute([{"revision":"5e49ceec735076545c43a42023673a08","url":"favicon.ico"},{"revision":"73524d277e6f7da0fe1742f6624eeded","url":"index.html"},{"revision":"d4f5395c1d96597a366a4b74961d6360","url":"_next/static/_6nPesBqXAXqdNqHgpZKL/_buildManifest.js"},{"revision":"7c3f7e060745668041278118c0bb3d6d","url":"_next/static/_6nPesBqXAXqdNqHgpZKL/_middlewareManifest.js"},{"revision":"b6652df95db52feb4daf4eca35380933","url":"_next/static/_6nPesBqXAXqdNqHgpZKL/_ssgManifest.js"},{"revision":"67da41e15f27bcf88082d90d13ad7300","url":"_next/static/chunks/385-292040a69aaa8307.js"},{"revision":"16d28cfc653e2b9ea1a83a227f362b96","url":"_next/static/chunks/651.243d23442247d286.js"},{"revision":"79dde3b3685ca2ba1df82109b1b2349a","url":"_next/static/chunks/795-0aa3d40342489219.js"},{"revision":"4328303147a9363db368b17367be6c71","url":"_next/static/chunks/framework-91d7f78b5b4003c8.js"},{"revision":"840ca8f03bf096096001bffa57bda8d5","url":"_next/static/chunks/main-59f1ed9830ced99b.js"},{"revision":"4ebdca21d854e94c31478b6c039be78f","url":"_next/static/chunks/pages/_app-bd713b4e03c6d680.js"},{"revision":"fea053aab8dd58ee73de8adbed62e718","url":"_next/static/chunks/pages/_error-8022dacb1937fc7a.js"},{"revision":"a3ace8f9648d290e42d0731dfcce3d9c","url":"_next/static/chunks/pages/about-85060cddcb9a4444.js"},{"revision":"ed91c056966d79aec664a191792cc42d","url":"_next/static/chunks/pages/index-5e76458e1d667be7.js"},{"revision":"99442aec5788bccac9b2f0ead2afdd6b","url":"_next/static/chunks/polyfills-5cd94c89d3acac5f.js"},{"revision":"5be7aa340afa4c1f5622795261b79488","url":"_next/static/chunks/webpack-971289bb40b46ced.js"},{"revision":"bc48c216363e9cb88963e6819e4b6a16","url":"_next/static/css/9bb3644d39976582.css"},{"revision":"d40d1e56c345d341176137806546ffb9","url":"app.webmanifest"}]);
 
     // NAVIGATION ROUTING
 
@@ -5187,22 +5187,6 @@
       }
     });
 
-    // Instantiating and configuring plugin
-    new BackgroundSyncPlugin('feedbackQueue', {
-      maxRetentionTime: 24 * 60, // Retry for max of 24 Hours (specified in minutes)
-
-      onSync: async ({ queue }) => {
-        // Run standard replay
-        await queue.replayRequests();
-
-        self.clients.matchAll().then((clients) => {
-          clients.forEach((client) =>
-            client.postMessage({ type: 'REPLAY_COMPLETED' })
-          );
-        });
-      },
-    });
-
     // ALL OTHER EVENTS
 
     // Receive push and show a notification
@@ -5218,8 +5202,8 @@
         notificationData = {
           title: 'No data from server',
           message: 'Displaying default notification',
-          icon: 'https://push.foo/images/icons/android-chrome-192x192.png',
-          badge: 'https://push.foo/images/icons/android-chrome-192x192.png',
+          icon: 'https://push.foo/images/logo.jpg',
+          badge: 'https://push.foo/images/logo-mask.png',
         };
       }
 
@@ -5242,12 +5226,12 @@
 
       event.notification.close();
 
-      if (event.action == 'opentweet') {
-        console.log('[Service Worker]: Performing action opentweet');
+      if (event.action == 'open_project_repo') {
+        console.log('[Service Worker]: Performing action open_project_repo');
 
         event.waitUntil(
-          clients.openWindow(event.notification.data).then(function (windowClient) {
-            // do something with the windowClient.
+          clients.openWindow('https://github.com/webmaxru/push.foo').then( (windowClient) => {
+            console.log('[Service Worker]: Opened window', windowClient);
           })
         );
       } else {

@@ -54,7 +54,7 @@ ReactGA.send('pageview');
 
 const clientSideEmotionCache = createEmotionCache();
 
-const drawerWidth = 240;
+const drawerWidth = 200;
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
@@ -92,7 +92,7 @@ const Drawer = styled(MuiDrawer, {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
       }),
-      width: theme.spacing(7),
+      width: theme.spacing(0),
       [theme.breakpoints.up('sm')]: {
         width: theme.spacing(9),
       },

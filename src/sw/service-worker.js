@@ -78,30 +78,6 @@ addEventListener('message', (event) => {
   }
 });
 
-// BACKGROUND SYNC
-
-const messageAboutFailPlugin = {
-  fetchDidFail: async ({ originalRequest, request, error, event, state }) => {
-    messageClient(event, 'REQUEST_FAILED');
-  },
-};
-
-// Instantiating and configuring plugin
-const bgSyncPlugin = new BackgroundSyncPlugin('feedbackQueue', {
-  maxRetentionTime: 24 * 60, // Retry for max of 24 Hours (specified in minutes)
-
-  onSync: async ({ queue }) => {
-    // Run standard replay
-    await queue.replayRequests();
-
-    self.clients.matchAll().then((clients) => {
-      clients.forEach((client) =>
-        client.postMessage({ type: 'REPLAY_COMPLETED' })
-      );
-    });
-  },
-});
-
 // ALL OTHER EVENTS
 
 // Receive push and show a notification
@@ -117,8 +93,8 @@ self.addEventListener('push', (event) => {
     notificationData = {
       title: 'No data from server',
       message: 'Displaying default notification',
-      icon: 'https://push.foo/images/icons/android-chrome-192x192.png',
-      badge: 'https://push.foo/images/icons/android-chrome-192x192.png',
+      icon: 'https://push.foo/images/logo.jpg',
+      badge: 'https://push.foo/images/logo-mask.png',
     };
   }
 
@@ -141,12 +117,12 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  if (event.action == 'opentweet') {
-    console.log('[Service Worker]: Performing action opentweet');
+  if (event.action == 'open_project_repo') {
+    console.log('[Service Worker]: Performing action open_project_repo');
 
     event.waitUntil(
-      clients.openWindow(event.notification.data).then(function (windowClient) {
-        // do something with the windowClient.
+      clients.openWindow('https://github.com/webmaxru/push.foo').then( (windowClient) => {
+        console.log('[Service Worker]: Opened window', windowClient);
       })
     );
   } else {

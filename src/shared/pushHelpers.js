@@ -15,8 +15,8 @@ export const defaultNotification = {
   title: 'Push.Foo Notification Title',
   actions: [
     {
-      action: 'action_custom',
-      title: 'Custom action',
+      action: 'open_project_repo',
+      title: 'Show source code',
     },
   ],
   body: 'Test notification body',
