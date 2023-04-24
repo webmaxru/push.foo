@@ -58,7 +58,6 @@ const navigationRoute = new NavigationRoute(navHandler, {
     new RegExp('/login'),
     new RegExp('/logout'),
     new RegExp('/.auth'),
-    new RegExp('/aboutme'),
     new RegExp('/400.html'),
     new RegExp('/404.html'),
     new RegExp('/privacy.html'),

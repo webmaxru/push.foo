@@ -26,7 +26,7 @@ module.exports = async function (context, req) {
     context.done();
   }
 
-  const sendLimit = 5; // Max 5 subscriptions
+  const sendLimit = 10; // Max 10 subscriptions
 
   const dbClient = new CosmosClient(process.env.pushfoodbaccount_DOCUMENTDB);
   const { database } = await dbClient.databases.createIfNotExists({

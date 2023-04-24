@@ -148,13 +148,24 @@ export default function Subscription(props) {
     },
   });
 
+  const getVapidPublicKey = async () => {
+    try {
+      await executeGetVapidPublicKey();
+    } catch (error) {
+      toast.error(
+        'Error getting VAPID public key'
+      );
+      console.error('[App] Error getting VAPID public key',error);
+    }
+  };
+
   const [
     {
       data: getVapidPublicKeyData,
       loading: getVapidPublicKeyLoading,
       error: getVapidPublicKeyError,
     },
-    getVapidPublicKey,
+    executeGetVapidPublicKey,
   ] = useAxios('/vapid-public-key');
 
   const [
@@ -244,10 +255,16 @@ export default function Subscription(props) {
               '[App] Push subscription successful:',
               pushSubscription.toJSON()
             );
+          })
+          .catch((error) => {
+            console.log('[App] Subscription failed', error);
+            toast.error(
+              'Cannot subscribe this browser. Check notification permission.'
+            );
           });
       })
-      .catch((err) => {
-        console.error(err);
+      .catch((error) => {
+        console.error(error);
       });
   };
 
@@ -264,11 +281,12 @@ export default function Subscription(props) {
             })
             .catch((error) => {
               console.log('[App] Unsubscription failed', error);
+              toast.error(err);
             });
         });
       })
-      .catch((err) => {
-        console.error(err);
+      .catch((error) => {
+        console.error(error);
       });
   };
 
