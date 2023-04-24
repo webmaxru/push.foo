@@ -33,7 +33,7 @@ import Copyright from '../src/Copyright';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import NotificationCount from '../src/NotificationCount';
-
+import NextLink from 'next/link';
 import createEmotionCache from '../utility/createEmotionCache';
 import lightTheme from '../styles/themes/lightTheme';
 import '../styles/globals.css';
@@ -184,18 +184,22 @@ const MyApp = (props) => {
               </Toolbar>
               <Divider />
               <List component="nav">
-                <ListItemButton component="a" href="/">
+              <NextLink href="/" passHref>
+                <ListItemButton component={Link} href="/">
                   <ListItemIcon>
                     <NotificationsIcon />
                   </ListItemIcon>
                   <ListItemText primary="Notifications" />
                 </ListItemButton>
-                <ListItemButton component="a" href="/about">
-                  <ListItemIcon>
-                    <BarChartIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="About" />
-                </ListItemButton>
+                </NextLink>
+                <NextLink href="/about" passHref>
+                  <ListItemButton component={Link}>
+                    <ListItemIcon>
+                      <BarChartIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="About" />
+                  </ListItemButton>
+                </NextLink>
               </List>
             </Drawer>
             <Box
@@ -217,7 +221,7 @@ const MyApp = (props) => {
               </Container>
             </Box>
           </Box>
-          <ToastContainer position={toast.POSITION.BOTTOM_RIGHT}/>
+          <ToastContainer position={toast.POSITION.BOTTOM_RIGHT} />
         </ThemeProvider>
       </CacheProvider>
     </Provider>
