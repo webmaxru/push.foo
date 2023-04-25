@@ -12,12 +12,21 @@ export default function ServiceWorkerRegistration(props) {
   const notificationCount = useSelector(selectNotificationCount);
 
   useEffect(() => {
-    console.log({ notificationCount });
+    if ('setAppBadge' in navigator) {
+      navigator
+        .setAppBadge(notificationCount)
+        .then(() => {
+          console.log('[App] The app badge was updated');
+        })
+        .catch((error) => {
+          console.error('[App] Error updating the app badge', error);
+        });
+    }
   }, [notificationCount]);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      console.log('[App] Trying to register service worker');
+      console.log('[App] Registering service worker');
 
       const wb = new Workbox(process.env.NEXT_PUBLIC_SW_PATH, {
         scope: process.env.NEXT_PUBLIC_SW_SCOPE,
@@ -62,6 +71,7 @@ export default function ServiceWorkerRegistration(props) {
           );
         }
         if (event.data.type === 'NOTIFICATION_RECEIVED') {
+          console.log('[App] Incrementing app title bar icon badge');
           dispatch(increment());
         }
       });

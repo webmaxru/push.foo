@@ -14,10 +14,25 @@ const NotificationCount = (props) => {
 
   const resetNotificationCount = () => {
     dispatch(reset());
+
+    if ('setAppBadge' in navigator) {
+      navigator
+        .clearAppBadge(notificationCount)
+        .then(() => {
+          console.log('[App] The app badge was removed');
+        })
+        .catch((error) => {
+          console.error('[App] Error removing the app badge', error);
+        });
+    }
   };
 
   return (
-    <IconButton color="inherit" onClick={resetNotificationCount} title="Click to reset notification count">
+    <IconButton
+      color="inherit"
+      onClick={resetNotificationCount}
+      title="Click to reset notification count"
+    >
       <Badge badgeContent={notificationCount} color="secondary">
         <NotificationsIcon />
       </Badge>
