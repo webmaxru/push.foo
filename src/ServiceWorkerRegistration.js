@@ -12,6 +12,10 @@ export default function ServiceWorkerRegistration(props) {
   const notificationCount = useSelector(selectNotificationCount);
 
   useEffect(() => {
+    console.log({ notificationCount });
+  }, [notificationCount]);
+
+  useEffect(() => {
     if ('serviceWorker' in navigator) {
       console.log('[App] Trying to register service worker');
 
@@ -58,7 +62,6 @@ export default function ServiceWorkerRegistration(props) {
           );
         }
         if (event.data.type === 'NOTIFICATION_RECEIVED') {
-          console.log(notificationCount);
           dispatch(increment());
         }
       });
