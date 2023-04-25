@@ -9,75 +9,10 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          <meta charSet="utf-8" />
-
-          {/* PWA primary color */}
-          <meta
-            name="description"
-            content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
-          />
-          <meta name="theme-color" content={lightTheme.palette.primary.main} />
-          <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="/images/icons/apple-touch-icon.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="/images/icons/favicon-32x32.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="/images/icons/favicon-16x16.png"
-          />
-          <link rel="manifest" href="/app.webmanifest" />
-          <meta name="msapplication-TileColor" content="#b00318" />
-          <meta
-            name="msapplication-TileImage"
-            content="/images/icons/mstile-150x150.png"
-          />
-          <meta property="og:url" content="https://push.foo" />
-          <meta property="og:type" content="website" />
-          <meta
-            property="og:title"
-            content="Push.Foo - Web Push API Playground"
-          />
-          <meta
-            property="og:description"
-            content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
-          />
-          <meta
-            property="og:image"
-            content="https://push.foo/images/social.png"
-          />
-
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta property="twitter:domain" content="push.foo" />
-          <meta property="twitter:url" content="https://push.foo" />
-          <meta
-            name="twitter:title"
-            content="Push.Foo - Web Push API Playground"
-          />
-          <meta
-            name="twitter:description"
-            content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
-          />
-          <meta
-            name="twitter:image"
-            content="https://push.foo/images/social.png"
-          />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-          />
           {/* Inject MUI styles first to match with the prepend: true configuration. */}
           {this.props.emotionStyleTags}
+          {/* PWA primary color */}
+          <meta name="theme-color" content={lightTheme.palette.primary.main} />
         </Head>
         <body>
           <Main />

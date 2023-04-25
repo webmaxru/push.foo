@@ -101,6 +101,8 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 const MyApp = (props) => {
+  //const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
+
   const { Component, ...rest } = props;
   const {
     emotionCache = clientSideEmotionCache,
@@ -120,13 +122,80 @@ const MyApp = (props) => {
       <CacheProvider value={emotionCache}>
         <ThemeProvider theme={lightTheme}>
           <Head>
+            <meta charSet="utf-8" />
             <meta
               name="viewport"
               content="width=device-width, initial-scale=1"
             />
             <title>Push.Foo - Web Push API Playground</title>
+            <meta
+              name="description"
+              content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
+            />
+            <link
+              rel="apple-touch-icon"
+              sizes="180x180"
+              href="/images/icons/apple-touch-icon.png"
+            />
+            <link
+              rel="icon"
+              type="image/png"
+              sizes="32x32"
+              href="/images/icons/favicon-32x32.png"
+            />
+            <link
+              rel="icon"
+              type="image/png"
+              sizes="16x16"
+              href="/images/icons/favicon-16x16.png"
+            />
+            <link rel="manifest" href="/app.webmanifest" />
+            <meta name="msapplication-TileColor" content="#b00318" />
+            <meta
+              name="msapplication-TileImage"
+              content="/images/icons/mstile-150x150.png"
+            />
+            <meta property="og:url" content="https://push.foo" />
+            <meta property="og:type" content="website" />
+            <meta
+              property="og:title"
+              content="Push.Foo - Web Push API Playground"
+            />
+            <meta
+              property="og:description"
+              content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
+            />
+            <meta
+              property="og:image"
+              content="https://push.foo/images/social.png"
+            />
+
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta property="twitter:domain" content="push.foo" />
+            <meta property="twitter:url" content="https://push.foo" />
+            <meta
+              name="twitter:title"
+              content="Push.Foo - Web Push API Playground"
+            />
+            <meta
+              name="twitter:description"
+              content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
+            />
+            <meta
+              name="twitter:image"
+              content="https://push.foo/images/social.png"
+            />
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link
+              rel="preconnect"
+              href="https://fonts.gstatic.com"
+              crossOrigin="true"
+            />
+            <link
+              rel="stylesheet"
+              href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+            />
           </Head>
-          <ServiceWorkerRegistration />
           <CssBaseline />
 
           <Box sx={{ display: 'flex' }}>
@@ -184,13 +253,13 @@ const MyApp = (props) => {
               </Toolbar>
               <Divider />
               <List component="nav">
-              <NextLink href="/" passHref>
-                <ListItemButton component={Link} href="/">
-                  <ListItemIcon>
-                    <NotificationsIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Notifications" />
-                </ListItemButton>
+                <NextLink href="/" passHref>
+                  <ListItemButton component={Link} href="/">
+                    <ListItemIcon>
+                      <NotificationsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Notifications" />
+                  </ListItemButton>
                 </NextLink>
                 <NextLink href="/about" passHref>
                   <ListItemButton component={Link}>
@@ -222,6 +291,7 @@ const MyApp = (props) => {
             </Box>
           </Box>
           <ToastContainer position={toast.POSITION.BOTTOM_RIGHT} />
+          <ServiceWorkerRegistration />
         </ThemeProvider>
       </CacheProvider>
     </Provider>
