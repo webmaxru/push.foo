@@ -27,7 +27,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleIcon from '@mui/icons-material/People';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import LayersIcon from '@mui/icons-material/Layers';
+import HelpCenterIcon from '@mui/icons-material/HelpCenter';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Copyright from '../src/Copyright';
 import { ToastContainer, toast } from 'react-toastify';
@@ -130,7 +130,7 @@ const MyApp = (props) => {
             <title>Push.Foo - Web Push API Playground</title>
             <meta
               name="description"
-              content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
+              content="Test your Web Push API experience in this sandbox that simulates the entire flow from requesting permission to sending the notification"
             />
             <link
               rel="apple-touch-icon"
@@ -163,7 +163,7 @@ const MyApp = (props) => {
             />
             <meta
               property="og:description"
-              content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
+              content="Test your Web Push API experience in this sandbox that simulates the entire flow from requesting permission to sending the notification"
             />
             <meta
               property="og:image"
@@ -179,7 +179,7 @@ const MyApp = (props) => {
             />
             <meta
               name="twitter:description"
-              content="Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification"
+              content="Test your Web Push API experience in this sandbox that simulates the entire flow from requesting permission to sending the notification"
             />
             <meta
               name="twitter:image"
@@ -190,10 +190,6 @@ const MyApp = (props) => {
               rel="preconnect"
               href="https://fonts.gstatic.com"
               crossOrigin="true"
-            />
-            <link
-              rel="stylesheet"
-              href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
             />
           </Head>
           <CssBaseline />
@@ -252,13 +248,21 @@ const MyApp = (props) => {
                 </IconButton>
               </Toolbar>
               <Divider />
-              <List component="nav">
+              <List component="nav" suppressHydrationWarning={true}>
                 <NextLink href="/" passHref>
                   <ListItemButton component={Link} href="/">
                     <ListItemIcon>
                       <NotificationsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Notifications" />
+                  </ListItemButton>
+                </NextLink>
+                <NextLink href="/resources" passHref>
+                  <ListItemButton component={Link}>
+                    <ListItemIcon>
+                      <HelpCenterIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Resources" />
                   </ListItemButton>
                 </NextLink>
                 <NextLink href="/about" passHref>

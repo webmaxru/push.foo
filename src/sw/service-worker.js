@@ -35,9 +35,6 @@ async function messageClient(event, messageType) {
 // Claiming control to start runtime caching asap
 clientsClaim();
 
-// Use to update the app after user triggered refresh
-self.skipWaiting();
-
 // Setting custom cache names
 setCacheNameDetails({ precache: 'wb6-precache', runtime: 'wb6-runtime' });
 

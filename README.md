@@ -1,6 +1,6 @@
 # Push.Foo - Web Push API Playground
 
-Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification.
+Test your Web Push API experience in this sandbox that simulates the entire flow from requesting permission to sending the notification.
 
 <p align="center">
     <img src="public/images/social.png" width="300">

@@ -1,7 +1,7 @@
 {
   "short_name": "Push.Foo",
   "name": "Push.Foo - Web Push API Playground",
-  "description": "Test your Web Push API code in this sandbox that simulates the entire flow from requesting permission to sending the notification",
+  "description": "Test your Web Push API experience in this sandbox that simulates the entire flow from requesting permission to sending the notification",
   "start_url": "/?utm_source=homescreen",
   "display": "standalone",
   "display_override": ["window-control-overlay", "minimal-ui"],

@@ -12,6 +12,7 @@ export default function ServiceWorkerRegistration(props) {
   const notificationCount = useSelector(selectNotificationCount);
 
   useEffect(() => {
+    console.log('[App] notificationCount', notificationCount);
     if ('setAppBadge' in navigator) {
       navigator
         .setAppBadge(notificationCount)

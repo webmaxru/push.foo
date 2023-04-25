@@ -12,7 +12,7 @@ export default function About() {
         <Typography variant="h4" component="h1" gutterBottom>
           What is Push.Foo?
         </Typography>
-        Test your Web Push API code in this sandbox that simulates the entire
+        Test your Web Push API experience in this sandbox that simulates the entire
         flow from requesting permission to sending the notification.
         <p align="center">
           <img src="/images/logo.png" width="200" />
