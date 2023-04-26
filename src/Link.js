@@ -7,7 +7,7 @@ import MuiLink from '@mui/material/Link';
 import { styled } from '@mui/material/styles';
 
 // Add support for the sx prop for consistency with the other branches.
-const Anchor = styled('a')({});
+const Anchor = styled('div')({});
 
 export const NextLinkComposed = React.forwardRef(function NextLinkComposed(props, ref) {
   const { to, linkAs, href, replace, scroll, shallow, prefetch, locale, ...other } = props;

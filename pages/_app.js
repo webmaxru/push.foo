@@ -26,7 +26,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleIcon from '@mui/icons-material/People';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import BarChartIcon from '@mui/icons-material/BarChart';
+import SchoolIcon from '@mui/icons-material/School';
 import HelpCenterIcon from '@mui/icons-material/HelpCenter';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Copyright from '../src/Copyright';
@@ -249,30 +249,24 @@ const MyApp = (props) => {
               </Toolbar>
               <Divider />
               <List component="nav" suppressHydrationWarning={true}>
-                <NextLink href="/" passHref>
-                  <ListItemButton component={Link} href="/">
+                  <ListItemButton component={NextLink} href="/">
                     <ListItemIcon>
                       <NotificationsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Notifications" />
                   </ListItemButton>
-                </NextLink>
-                <NextLink href="/resources" passHref>
-                  <ListItemButton component={Link}>
+                  <ListItemButton component={NextLink} href="/resources">
+                    <ListItemIcon>
+                      <SchoolIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Learn Push API" />
+                  </ListItemButton>
+                  <ListItemButton component={NextLink} href="/about">
                     <ListItemIcon>
                       <HelpCenterIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Resources" />
-                  </ListItemButton>
-                </NextLink>
-                <NextLink href="/about" passHref>
-                  <ListItemButton component={Link}>
-                    <ListItemIcon>
-                      <BarChartIcon />
-                    </ListItemIcon>
                     <ListItemText primary="About" />
                   </ListItemButton>
-                </NextLink>
               </List>
             </Drawer>
             <Box

@@ -18,20 +18,20 @@ export default function About() {
             Specifications
             <ul>
               <li>
-                <a href="https://www.rfc-editor.org/rfc/rfc8292">
+                <Link href="https://www.rfc-editor.org/rfc/rfc8292">
                   Voluntary Application Server Identification (VAPID) for Web
                   Push
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="https://notifications.spec.whatwg.org/">
+                <Link href="https://notifications.spec.whatwg.org/">
                   Notifications API
-                </a>{' '}
+                </Link>{' '}
                 - WHATWG
               </li>
 
               <li>
-                <a href="https://www.w3.org/TR/push-api/">Push API</a> - W3C
+                <Link href="https://www.w3.org/TR/push-api/">Push API</Link> - W3C
               </li>
             </ul>
           </li>
@@ -39,16 +39,16 @@ export default function About() {
             API References
             <ul>
               <li>
-                <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API">
+                <Link href="https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API">
                   Notifications API
-                </a>{' '}
+                </Link>{' '}
                 - MDN
               </li>
 
               <li>
-                <a href="https://developer.mozilla.org/en-US/docs/web/api/push_api">
+                <Link href="https://developer.mozilla.org/en-US/docs/web/api/push_api">
                   Push API
-                </a>{' '}
+                </Link>{' '}
                 - MDN
               </li>
             </ul>
@@ -57,23 +57,23 @@ export default function About() {
             Guides
             <ul>
               <li>
-                <a href="https://web.dev/notifications/">
+                <Link href="https://web.dev/notifications/">
                   Web Push and Notifications
-                </a>{' '}
+                </Link>{' '}
                 - web.dev
               </li>
 
               <li>
-                <a href="https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/notifications-badges">
+                <Link href="https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/notifications-badges">
                   Re-engage users with badges, notifications, and push messages
-                </a>{' '}
+                </Link>{' '}
                 - Microsoft Learn
               </li>
 
               <li>
-                <a href="https://microsoft.github.io/win-student-devs/#/30DaysOfPWA/advanced-capabilities/07">
+                <Link href="https://microsoft.github.io/win-student-devs/#/30DaysOfPWA/advanced-capabilities/07">
                   Notifying your users of updates
-                </a>{' '}
+                </Link>{' '}
                 - #30DaysOfPWA
               </li>
             </ul>
@@ -82,11 +82,21 @@ export default function About() {
             Libraries
             <ul>
               <li>
-                <a href="https://www.npmjs.com/package/web-push">web-push</a> -
+                <Link href="https://www.npmjs.com/package/web-push">web-push</Link> -
                 npm
               </li>
             </ul>
           </li>
+          <li>
+            Presentations
+            <ul>
+              <li>
+                <Link href="https://slides.com/webmax/web-push/">Web Push Notifications Done Right</Link> -
+                Maxim Salnikov
+              </li>
+            </ul>
+          </li>
+          
         </ul>
         <Button variant="contained" component={Link} noLinkStyle href="/">
           Go to the main page

@@ -379,7 +379,7 @@ export default function Subscription(props) {
       </Typography>
 
       <Typography variant="body1" gutterBottom color="text.secondary">
-        Test how the Web Push notification looks like on this device
+        Test how does the Web Push notification look like on this device
       </Typography>
 
       <Card variant="outlined" sx={{ mb: 3 }}>
@@ -395,8 +395,8 @@ export default function Subscription(props) {
                 1. Subscribe this device{' '}
                 {pushSubscription ? '(subscribed)' : ''}
               </Button>
-              <Typography variant="caption" display="block" sx={{ mb: 2 }}>
-                Have a look at the icon in the address bar - you might need to
+              <Typography variant="caption" display="block" sx={{ mb: 2 }} color="warning.main">
+                If nothing happens, look at the icon in the address bar - you might need to
                 allow notifications there
               </Typography>
 
@@ -411,8 +411,8 @@ export default function Subscription(props) {
                 2. Send notification here
               </Button>
               <Typography variant="caption" display="block" sx={{ mb: 2 }}>
-                You can change some parameters of the notification in the form
-                below
+                You can change some parameters of the notification in the <Link color="secondary" href="#notification">form
+                below</Link>
               </Typography>
 
               <Button
@@ -601,7 +601,7 @@ export default function Subscription(props) {
 
       <Divider variant="middle" />
 
-      <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ mt: 3 }} id="notification">
         Notification properties
       </Typography>
 
