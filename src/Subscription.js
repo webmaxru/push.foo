@@ -152,10 +152,8 @@ export default function Subscription(props) {
     try {
       await executeGetVapidPublicKey();
     } catch (error) {
-      toast.error(
-        'Error getting VAPID public key'
-      );
-      console.error('[App] Error getting VAPID public key',error);
+      toast.error('Error getting VAPID public key');
+      console.error('[App] Error getting VAPID public key', error);
     }
   };
 
@@ -269,6 +267,8 @@ export default function Subscription(props) {
   };
 
   const unsubscribe = () => {
+    ReactGA.event('unsubscribe', {});
+
     navigator.serviceWorker
       .getRegistration(process.env.NEXT_PUBLIC_SW_SCOPE)
       .then((registration) => {
@@ -306,6 +306,8 @@ export default function Subscription(props) {
   };
 
   const saveSubscription = (tag) => {
+    ReactGA.event('save_subscription', { pushSubscription: pushSubscription });
+
     executeSaveSubscription({
       data: { pushSubscription: pushSubscription, tags: [tag] },
     })
@@ -318,6 +320,10 @@ export default function Subscription(props) {
   };
 
   const deleteSubscription = () => {
+    ReactGA.event('delete_subscription', {
+      subscriptionId: saveSubscriptionData?.subscriptionId,
+    });
+
     executeDeleteSubscription({
       params: { subscriptionId: saveSubscriptionData?.subscriptionId },
     })
@@ -335,6 +341,8 @@ export default function Subscription(props) {
     notification.body = values.body;
     notification.image = values.image;
     notification.icon = values.icon;
+
+    ReactGA.event('send_quick_notification', { notification: notification });
 
     executeSendQuickNotification({
       data: {
@@ -357,10 +365,20 @@ export default function Subscription(props) {
     notification.image = notificationFormik.values.image;
     notification.icon = notificationFormik.values.icon;
 
+    let subscriptionIds = values.subscriptionIds
+      ?.replace(/\s+/g, '')
+      .split(',');
+
+    ReactGA.event('send_notification', {
+      notification: notification,
+      tag: values.tag,
+      subscriptionIds: subscriptionIds,
+    });
+
     executeSendNotification({
       data: {
         tag: values.tag,
-        subscriptionIds: values.subscriptionIds?.replace(/\s+/g, '').split(','),
+        subscriptionIds: subscriptionIds,
         notification: notification,
       },
     })
@@ -395,9 +413,14 @@ export default function Subscription(props) {
                 1. Subscribe this device{' '}
                 {pushSubscription ? '(subscribed)' : ''}
               </Button>
-              <Typography variant="caption" display="block" sx={{ mb: 2 }} color="warning.main">
-                If nothing happens, look at the icon in the address bar - you might need to
-                allow notifications there
+              <Typography
+                variant="caption"
+                display="block"
+                sx={{ mb: 2 }}
+                color="warning.main"
+              >
+                If nothing happens, look at the icon in the address bar - you
+                might need to allow notifications there
               </Typography>
 
               <Button
@@ -411,8 +434,10 @@ export default function Subscription(props) {
                 2. Send notification here
               </Button>
               <Typography variant="caption" display="block" sx={{ mb: 2 }}>
-                You can change some parameters of the notification in the <Link color="secondary" href="#notification">form
-                below</Link>
+                You can change some parameters of the notification in the{' '}
+                <Link color="secondary" href="#notification">
+                  form below
+                </Link>
               </Typography>
 
               <Button
