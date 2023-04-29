@@ -13,8 +13,17 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import {
   urlBase64ToUint8Array,
+  subscribe,
+  unsubscribe,
+  getExistingSubscription,
   defaultNotification,
+  buildNotification,
 } from './shared/pushHelpers';
+import {
+  saveSubscriptionValidationSchema,
+  notificationValidationSchema,
+  sendNotificationValidationSchema,
+} from './shared/validationSchemas';
 import useAxios from 'axios-hooks';
 import { configure } from 'axios-hooks';
 import Axios from 'axios';
@@ -29,9 +38,14 @@ import {
   selectPushSubscription,
   selectSubscriptionId,
 } from '../store/subscriptionSlice';
+import {
+  setNotification,
+  selectNotification,
+} from '../store/notificationSlice';
 import { useFormik } from 'formik';
-import * as yup from 'yup';
+
 import ProTip from '../src/ProTip';
+import NotificationForm from '../src/NotificationForm';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -49,34 +63,6 @@ function TabPanel(props) {
   );
 }
 
-const saveSubscriptionValidationSchema = yup.object({
-  tag: yup
-    .string('Enter the tag for the subscription')
-    .max(20, 'Tag should be of maximum 20 characters length'),
-});
-
-const notificationValidationSchema = yup.object({
-  title: yup
-    .string('Enter notification title')
-    .max(256, 'Title should be of maximum 256 characters length')
-    .required('Title is required'),
-  body: yup
-    .string('Enter notification body text')
-    .max(512, 'Body text should be of maximum 512 characters length')
-    .required('Body text is required'),
-  image: yup
-    .string('Enter notification image url')
-    .url('This should be a valid url'),
-  icon: yup
-    .string('Enter notification icon url')
-    .url('This should be a valid url'),
-});
-
-const sendNotificationValidationSchema = yup.object({
-  subscriptionIds: yup.string('Enter comma-separated subscription IDs'),
-  tag: yup.string('Enter the tag for the subscription'),
-});
-
 const axios = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
 });
@@ -87,7 +73,7 @@ configure({
     manual: true,
     useCache: false,
     ssr: false,
-    autoCancel: true,
+    autoCancel: false,
   },
 });
 
@@ -97,16 +83,10 @@ export default function Subscription(props) {
   const pushSubscription = useSelector(selectPushSubscription);
   const subscriptionId = useSelector(selectSubscriptionId);
 
-  const [notificationModeState, setNotificationModeState] = useState(null);
-
   const [sendTabValue, setSendTabValue] = React.useState(0);
 
   const handleSendTabValueChange = (event, newValue) => {
     setSendTabValue(newValue);
-  };
-
-  const handleNotificationModeState = (mode) => {
-    setNotificationModeState(mode);
   };
 
   const saveSubscriptionFormik = useFormik({
@@ -114,26 +94,18 @@ export default function Subscription(props) {
       tag: '',
     },
     validationSchema: saveSubscriptionValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: (values, { setSubmitting }) => {
       saveSubscription(values.tag);
+      setSubmitting(false);
     },
   });
 
   const notificationFormik = useFormik({
-    initialValues: {
-      title: 'Hello from Push.Foo',
-      body: 'This is a test notification',
-      image: 'https://push.foo/images/social.png',
-      icon: 'https://push.foo/images/logo.jpg',
-    },
+    initialValues: defaultNotification,
     validationSchema: notificationValidationSchema,
-    onSubmit: (values) => {
-      if (notificationModeState === 'quick') {
-        sendQuickNotification(values);
-      }
-      if (notificationModeState === 'multi') {
-        sendNotificationFormik.handleSubmit();
-      }
+    onSubmit: (values, { setSubmitting }) => {
+      dispatch(setNotification(values));
+      setSubmitting(false);
     },
   });
 
@@ -143,12 +115,14 @@ export default function Subscription(props) {
       subscriptionIds: '',
     },
     validationSchema: sendNotificationValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: (values, { setSubmitting }) => {
       sendNotification(values);
+      setSubmitting(false);
     },
   });
 
   const getVapidPublicKey = async () => {
+    console.log('[App] Getting VAPID public key');
     try {
       await executeGetVapidPublicKey();
     } catch (error) {
@@ -222,83 +196,67 @@ export default function Subscription(props) {
     method: 'POST',
   });
 
+  let initialized = false;
+
   useEffect(() => {
-    if ('PushManager' in window) {
-      dispatch(setIsFeatureAvailable(true));
-      getVapidPublicKey();
-      getExistingSubscription();
-    } else {
-      dispatch(setIsFeatureAvailable(false));
+    if (!initialized) {
+      initialized = true;
+
+      if ('PushManager' in window) {
+        dispatch(setIsFeatureAvailable(true));
+        getVapidPublicKey();
+        handleGetExistingSubscription();
+      } else {
+        dispatch(setIsFeatureAvailable(false));
+      }
     }
   }, []);
 
-  const subscribe = () => {
+  const handleSubscribe = () => {
     ReactGA.event('subscribe', {});
 
     let convertedVapidKey = urlBase64ToUint8Array(
       getVapidPublicKeyData['vapid-public-key']
     );
 
-    navigator.serviceWorker
-      .getRegistration(process.env.NEXT_PUBLIC_SW_SCOPE)
-      .then((registration) => {
-        registration.pushManager
-          .subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: convertedVapidKey,
-          })
-          .then((pushSubscription) => {
-            dispatch(setPushSubscription(pushSubscription.toJSON()));
-            console.log(
-              '[App] Push subscription successful:',
-              pushSubscription.toJSON()
-            );
-          })
-          .catch((error) => {
-            console.log('[App] Subscription failed', error);
-            toast.error(
-              'Cannot subscribe this browser. Check notification permission.'
-            );
-          });
+    subscribe(convertedVapidKey, process.env.NEXT_PUBLIC_SW_SCOPE)
+      .then((pushSubscription) => {
+        dispatch(setPushSubscription(pushSubscription.toJSON()));
+        console.log(
+          '[App] Push subscription successful:',
+          pushSubscription.toJSON()
+        );
+        return pushSubscription;
       })
       .catch((error) => {
-        console.error(error);
+        console.log('[App] Subscription failed', error);
+        toast.error(
+          'Cannot subscribe this browser. Check notification permission.'
+        );
       });
   };
 
-  const unsubscribe = () => {
+  const handleUnsubscribe = () => {
     ReactGA.event('unsubscribe', {});
 
-    navigator.serviceWorker
-      .getRegistration(process.env.NEXT_PUBLIC_SW_SCOPE)
-      .then((registration) => {
-        registration.pushManager.getSubscription().then((pushSubscription) => {
-          pushSubscription
-            .unsubscribe()
-            .then((success) => {
-              dispatch(setPushSubscription(null));
-              console.log('[App] Unsubscription successful', success);
-            })
-            .catch((error) => {
-              console.log('[App] Unsubscription failed', error);
-              toast.error(err);
-            });
-        });
+    unsubscribe(process.env.NEXT_PUBLIC_SW_SCOPE)
+      .then((success) => {
+        dispatch(setPushSubscription(null));
+        console.log('[App] Unsubscription successful', success);
       })
       .catch((error) => {
-        console.error(error);
+        console.log('[App] Unsubscription failed', error);
+        toast.error(err);
       });
   };
 
-  const getExistingSubscription = () => {
-    navigator.serviceWorker.ready
-      .then((registration) => {
-        registration.pushManager.getSubscription().then((pushSubscription) => {
-          console.log('[App] Existing subscription found:', pushSubscription);
-          dispatch(setPushSubscription(pushSubscription?.toJSON()));
+  const handleGetExistingSubscription = () => {
+    getExistingSubscription()
+      .then((pushSubscription) => {
+        console.log('[App] Existing subscription found:', pushSubscription);
+        dispatch(setPushSubscription(pushSubscription?.toJSON()));
 
-          return pushSubscription;
-        });
+        return pushSubscription;
       })
       .catch((err) => {
         console.error(err);
@@ -335,12 +293,20 @@ export default function Subscription(props) {
       });
   };
 
+  const handleSendQuickNotification = () => {
+    notificationFormik.handleSubmit();
+    notificationFormik.validateForm().then((errors) => {
+      if (Object.keys(errors).length === 0) {
+        sendQuickNotification(notificationFormik.values);
+      } else {
+        toast.error('Error validating notification form');
+      }
+    });
+  };
+
   const sendQuickNotification = (values) => {
-    let notification = defaultNotification;
-    notification.title = values.title;
-    notification.body = values.body;
-    notification.image = values.image;
-    notification.icon = values.icon;
+    let notification = buildNotification(values);
+    console.log('[App] Sending notification', notification);
 
     ReactGA.event('send_quick_notification', { notification: notification });
 
@@ -351,19 +317,29 @@ export default function Subscription(props) {
       },
     })
       .then(() => {
-        toast.success('Success sending notification');
+        toast.success(
+          'Success sending push (this is NOT notification itself!)'
+        );
       })
       .catch(() => {
         toast.error('Error sending notification');
       });
   };
 
+  const handleSendNotification = () => {
+    notificationFormik.handleSubmit();
+    notificationFormik.validateForm().then((errors) => {
+      if (Object.keys(errors).length === 0) {
+        sendNotificationFormik.handleSubmit();
+      } else {
+        toast.error('Error validating notification form');
+      }
+    });
+  };
+
   const sendNotification = (values) => {
-    let notification = defaultNotification;
-    notification.title = notificationFormik.values.title;
-    notification.body = notificationFormik.values.body;
-    notification.image = notificationFormik.values.image;
-    notification.icon = notificationFormik.values.icon;
+    let notification = buildNotification(notificationFormik.values);
+    console.log('[App] Sending notification', notification);
 
     let subscriptionIds = values.subscriptionIds
       ?.replace(/\s+/g, '')
@@ -383,7 +359,9 @@ export default function Subscription(props) {
       },
     })
       .then(() => {
-        toast.success('Success sending notification');
+        toast.success(
+          'Success sending push (this is NOT notification itself!)'
+        );
       })
       .catch(() => {
         toast.error('Error sending notification');
@@ -406,7 +384,7 @@ export default function Subscription(props) {
             <>
               <Button
                 variant="contained"
-                onClick={subscribe}
+                onClick={handleSubscribe}
                 disabled={pushSubscription ? true : false}
                 fullWidth
               >
@@ -419,17 +397,16 @@ export default function Subscription(props) {
                 sx={{ mb: 2 }}
                 color="warning.main"
               >
-                If nothing happens, look at the icon in the address bar - you
+                If nothing happens, click again and/or look at the icon in the address bar - you
                 might need to allow notifications there
               </Typography>
 
               <Button
-                form="notificationForm"
                 variant="contained"
                 fullWidth
                 type="submit"
                 disabled={!pushSubscription ? true : false}
-                onClick={() => handleNotificationModeState('quick')}
+                onClick={() => handleSendQuickNotification()}
               >
                 2. Send notification here
               </Button>
@@ -443,7 +420,7 @@ export default function Subscription(props) {
               <Button
                 fullWidth
                 variant="outlined"
-                onClick={unsubscribe}
+                onClick={handleUnsubscribe}
                 disabled={!pushSubscription ? true : false}
               >
                 3. (Optional) Unsubscribe
@@ -462,17 +439,17 @@ export default function Subscription(props) {
       <ProTip />
 
       <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
-        Multi-device/browser push notification
+        Multi-device push notifications
       </Typography>
 
       <Typography variant="body1" gutterBottom color="text.secondary">
-        Register multiple devices and/or browsers and send notifications there
+        Register multiple devices and/or browsers on this device and send notifications there
       </Typography>
 
       <Card variant="outlined" sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h5" gutterBottom>
-            Send notifications to previously registered devices
+            Send notifications to the previously registered devices
           </Typography>
 
           <form>
@@ -531,17 +508,16 @@ export default function Subscription(props) {
             </TabPanel>
 
             <Button
-              form="notificationForm"
               variant="contained"
               fullWidth
-              type="submit"
-              onClick={() => handleNotificationModeState('multi')}
+              type="button"
+              onClick={() => handleSendNotification()}
             >
               Send notifications
             </Button>
             <Typography variant="caption" display="block" sx={{ mb: 2 }}>
               You can change some parameters of the notification in the form
-              below. Only notifications for your maximum 10 latest device
+              below. Only notifications for your 10 latest device
               registrations will be sent.
             </Typography>
           </form>
@@ -626,109 +602,9 @@ export default function Subscription(props) {
 
       <Divider variant="middle" />
 
-      <Typography variant="h4" gutterBottom sx={{ mt: 3 }} id="notification">
-        Notification properties
-      </Typography>
-
-      <Typography variant="body1" color="text.secondary">
-        These properties are in use by both instant and multi-device options
-        above
-      </Typography>
-
-      <Card variant="outlined" sx={{ mb: 3 }}>
-        <CardContent>
-          <form
-            onSubmit={notificationFormik.handleSubmit}
-            id="notificationForm"
-          >
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="title"
-              name="title"
-              label="Notification title"
-              type="text"
-              value={notificationFormik.values.title}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.title &&
-                Boolean(notificationFormik.errors.title)
-              }
-              helperText={
-                notificationFormik.touched.title &&
-                notificationFormik.errors.title
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="body"
-              name="body"
-              label="Body. Main text of the notification."
-              type="text"
-              value={notificationFormik.values.body}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.body &&
-                Boolean(notificationFormik.errors.body)
-              }
-              helperText={
-                notificationFormik.touched.body &&
-                notificationFormik.errors.body
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="image"
-              name="image"
-              label="Image. Main image, part of the content."
-              type="text"
-              value={notificationFormik.values.image}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.image &&
-                Boolean(notificationFormik.errors.image)
-              }
-              helperText={
-                notificationFormik.touched.image &&
-                notificationFormik.errors.image
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              disabled={!pushSubscription ? true : false}
-              fullWidth
-              id="icon"
-              name="icon"
-              label="Icon. Secondary image of notification."
-              type="text"
-              value={notificationFormik.values.icon}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.icon &&
-                Boolean(notificationFormik.errors.icon)
-              }
-              helperText={
-                notificationFormik.touched.icon &&
-                notificationFormik.errors.icon
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-          </form>
-
-          <Typography variant="body1" gutterBottom>
-            There are many more properties you can customize including custom
-            actions. This will be added in the next version of Push.Foo
-          </Typography>
-        </CardContent>
-      </Card>
+      <NotificationForm
+        notificationFormik={notificationFormik}
+      ></NotificationForm>
     </>
   );
 }

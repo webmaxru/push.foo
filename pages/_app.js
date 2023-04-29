@@ -217,9 +217,9 @@ const MyApp = (props) => {
                 <Box
                   component="img"
                   sx={{
-                    height: 64,
+                    height: 60,
                   }}
-                  alt="Push.Foo"
+                  alt="Push.Foo - Web Push Playground"
                   src="/images/logo-mask.png"
                 />
                 <Typography
@@ -229,7 +229,7 @@ const MyApp = (props) => {
                   noWrap
                   sx={{ flexGrow: 1 }}
                 >
-                  Push.Foo
+                  Web Push Playground
                 </Typography>
                 <NotificationCount />
               </Toolbar>

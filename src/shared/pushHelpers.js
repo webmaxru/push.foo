@@ -11,6 +11,61 @@ export const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
+export const subscribe = (vapidPublicKey, swScope) => {
+  return navigator.serviceWorker
+    .getRegistration(swScope)
+    .then((registration) => {
+      return registration.pushManager
+        .subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: vapidPublicKey,
+        })
+        .then((pushSubscription) => {
+          return pushSubscription;
+        })
+        .catch((error) => {
+          throw new Error(error);
+        });
+    })
+    .catch((error) => {
+      throw new Error(error);
+    });
+};
+
+export const unsubscribe = (swScope) => {
+  return navigator.serviceWorker
+    .getRegistration(swScope)
+    .then((registration) => {
+      registration.pushManager.getSubscription().then((pushSubscription) => {
+        pushSubscription
+          .unsubscribe()
+          .then((success) => {
+            return success;
+          })
+          .catch((error) => {
+            throw new Error(error);
+          });
+      });
+    })
+    .catch((error) => {
+      throw new Error(error);
+    });
+};
+
+export const getExistingSubscription = () => {
+  return navigator.serviceWorker.ready
+    .then((registration) => {
+      return registration.pushManager
+        .getSubscription()
+        .then((pushSubscription) => {
+          return pushSubscription;
+        });
+    })
+    .catch((error) => {
+      throw new Error(error);
+    });
+};
+
 export const defaultNotification = {
   title: 'Push.Foo Notification Title',
   actions: [
@@ -29,6 +84,17 @@ export const defaultNotification = {
   requireInteraction: 'true',
   tag: 'tag',
   vibrate: [300, 100, 400],
-}
+};
 
-export default { urlBase64ToUint8Array, defaultNotification };
+export const buildNotification = (newValues) => {
+  return Object.assign({}, defaultNotification, newValues);
+};
+
+export default {
+  urlBase64ToUint8Array,
+  defaultNotification,
+  subscribe,
+  unsubscribe,
+  getExistingSubscription,
+  buildNotification
+};

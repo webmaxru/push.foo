@@ -3,6 +3,7 @@ import { createWrapper } from 'next-redux-wrapper';
 import { authSlice } from './authSlice';
 import { notificationCountSlice } from './notificationCountSlice';
 import { subscriptionSlice } from './subscriptionSlice';
+import { notificationSlice } from './notificationSlice';
 
 // https://blog.openreplay.com/state-management-in-next-js-with-redux-toolkit/
 // https://stackoverflow.com/a/73761411/1310228
@@ -13,6 +14,7 @@ const makeStore = () =>
       [authSlice.name]: authSlice.reducer,
       [notificationCountSlice.name]: notificationCountSlice.reducer,
       [subscriptionSlice.name]: subscriptionSlice.reducer,
+      [notificationSlice.name]: notificationSlice.reducer,
     },
     devTools: true,
   });

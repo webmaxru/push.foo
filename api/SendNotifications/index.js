@@ -26,7 +26,8 @@ module.exports = async function (context, req) {
     context.done();
   }
 
-  const sendLimit = 10; // Max 10 subscriptions
+  const sendLimit =
+    req.body.API_KEY !== process.env.API_KEY ? ' OFFSET 0 LIMIT 10' : ''; // Max 10 subscriptions
 
   const dbClient = new CosmosClient(process.env.pushfoodbaccount_DOCUMENTDB);
   const { database } = await dbClient.databases.createIfNotExists({
@@ -83,9 +84,7 @@ module.exports = async function (context, req) {
   }
 
   query +=
-    queryWhereParts.join(' OR ') +
-    ' ORDER BY c.timestamp DESC OFFSET 0 LIMIT ' +
-    sendLimit;
+    queryWhereParts.join(' OR ') + ' ORDER BY c.timestamp DESC' + sendLimit;
 
   let paramQuery = {
     query: query,
