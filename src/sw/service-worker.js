@@ -7,6 +7,8 @@ import { NetworkOnly } from 'workbox-strategies';
 import { googleFontsCache } from 'workbox-recipes';
 import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import * as googleAnalytics from 'workbox-google-analytics';
+import {offlineFallback} from 'workbox-recipes';
+
 
 async function messageClient(event, messageType) {
   console.log('[Service Worker]: Sending message to app', messageType);
@@ -41,7 +43,7 @@ setCacheNameDetails({ precache: 'wb6-precache', runtime: 'wb6-runtime' });
 // PRECACHING
 
 // Precache and serve resources from __WB_MANIFEST array
-precacheAndRoute(self.__WB_MANIFEST);
+//precacheAndRoute(self.__WB_MANIFEST);
 
 // NAVIGATION ROUTING
 
@@ -61,6 +63,10 @@ const navigationRoute = new NavigationRoute(navHandler, {
   ], // Also might be specified explicitly via allowlist
 });
 registerRoute(navigationRoute); */
+
+// OFFLINE FALLBACK
+
+offlineFallback();
 
 // STATIC RESOURCES
 
@@ -178,7 +184,7 @@ self.addEventListener('notificationclick', (event) => {
 
 // Closing notification action
 self.addEventListener('notificationclose', (event) => {
-  log('[Service Worker]: Received notificationclose event');
+  console.log('[Service Worker]: Received notificationclose event');
 });
 
 googleAnalytics.initialize();
