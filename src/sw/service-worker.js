@@ -12,7 +12,7 @@ import { setDefaultHandler } from 'workbox-routing';
 
 const openWindow = (url) => {
   return clients
-    .openWindow()
+    .openWindow(url)
     .then((windowClient) => {
       console.log('[Service Worker]: Opened window', windowClient);
       return windowClient;
@@ -80,8 +80,8 @@ registerRoute(navigationRoute); */
 
 // OFFLINE FALLBACK
 
-setDefaultHandler(new NetworkOnly());
-offlineFallback();
+//setDefaultHandler(new NetworkOnly());
+//offlineFallback();
 
 // STATIC RESOURCES
 
@@ -150,7 +150,11 @@ self.addEventListener('push', (event) => {
 
   console.log('[Service Worker]: notificationData', notificationData);
 
-  const messageClientPromise = messageClient(event, 'NOTIFICATION_RECEIVED', notificationData);
+  const messageClientPromise = messageClient(
+    event,
+    'NOTIFICATION_RECEIVED',
+    notificationData
+  );
 
   const showNotificationPromise = self.registration.showNotification(
     notificationData.title,
@@ -166,23 +170,24 @@ self.addEventListener('push', (event) => {
 
 // Custom notification actions
 self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker]: Received notificationclick event');
-
-  event.notification.close();
+  console.log(
+    '[Service Worker]: Received notificationclick event',
+    event.notification
+  );
 
   try {
-    notificationData = event.data.json();
+    let notification = event.notification;
 
     if (event.action == 'open_project_repo') {
       console.log('[Service Worker]: Performing action open_project_repo');
 
-      event.waitUntil(openWindow(notificationData.data.project.github));
+      event.waitUntil(openWindow(notification.data.project.github));
 
       return;
     } else if (event.action == 'open_author_twitter') {
       console.log('[Service Worker]: Performing action open_author_twitter');
 
-      event.waitUntil(openWindow(notificationData.data.author.twitter));
+      event.waitUntil(openWindow(notification.data.author.twitter));
 
       return;
     }
@@ -208,11 +213,16 @@ self.addEventListener('notificationclick', (event) => {
         if (clients.openWindow) return clients.openWindow('/');
       })
   );
+
+  event.notification.close();
 });
 
 // Closing notification action
 self.addEventListener('notificationclose', (event) => {
-  console.log('[Service Worker]: Received notificationclose event');
+  console.log(
+    '[Service Worker]: Received notificationclose event',
+    event.notification
+  );
 });
 
 googleAnalytics.initialize();

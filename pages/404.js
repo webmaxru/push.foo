@@ -13,6 +13,8 @@ export default function Error404() {
           Error 404
         </Typography>
         Page not found
+        <br />
+        <br />
         <Button variant="contained" component={Link} noLinkStyle href="/">
           Go to the main page
         </Button>

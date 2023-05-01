@@ -76,12 +76,12 @@ export default function ServiceWorkerRegistration(props) {
           );
         }
         if (event.data.type === 'NOTIFICATION_RECEIVED') {
-          console.log('[App] Incrementing notification counters');
-          if (event.data.data?.updateInAppCounter) {
+          console.log('[App] Incrementing notification counters',event);
+          if (event.data.data?.data?.updateInAppCounter) {
             console.log('[App] Incrementing in-app counter');
             dispatch(incrementInAppCount());
           }
-          if (event.data.data?.updateIconBadgeCounter) {
+          if (event.data.data?.data?.updateIconBadgeCounter) {
             console.log('[App] Incrementing icon badge counter');
             dispatch(incrementIconBadgeCount());
           }

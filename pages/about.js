@@ -12,8 +12,8 @@ export default function About() {
         <Typography variant="h4" component="h1" gutterBottom>
           What is Push.Foo?
         </Typography>
-        Test your Web Push API experience in this sandbox that simulates the entire
-        flow from requesting permission to sending the notification.
+        Test your Web Push API experience in this sandbox that simulates the
+        entire flow from requesting permission to sending the notification.
         <p align="center">
           <img src="/images/logo.png" width="200" />
         </p>
@@ -32,10 +32,12 @@ export default function About() {
             Workbox-powered service worker.
           </li>
         </ol>
-        <Button variant="contained" component={Link} noLinkStyle href="/">
-          Go to the main page
-        </Button>
-        
+        Your{' '}
+        <Link href="https://github.com/webmaxru/push.foo/issues">
+          comments, bug reports, and pull requests
+        </Link>{' '}
+        are very welcome!
+
       </Box>
     </Container>
   );
