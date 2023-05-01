@@ -104,7 +104,7 @@ export default function NotificationForm(props) {
             <FormControlLabel
               control={
                 <Switch
-                  name="updateInAppCounter"
+                  name="data.updateInAppCounter"
                   checked={notificationFormik.values.data.updateInAppCounter}
                   onChange={notificationFormik.handleChange}
                 />
@@ -114,7 +114,7 @@ export default function NotificationForm(props) {
             <FormControlLabel
               control={
                 <Switch
-                  name="updateIconBadgeCounter"
+                  name="data.updateIconBadgeCounter"
                   checked={notificationFormik.values.data.updateIconBadgeCounter}
                   onChange={notificationFormik.handleChange}
                 />

@@ -8,12 +8,27 @@ import { googleFontsCache } from 'workbox-recipes';
 import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import * as googleAnalytics from 'workbox-google-analytics';
 import { offlineFallback } from 'workbox-recipes';
+import { setDefaultHandler } from 'workbox-routing';
 
-async function messageClient(event, messageType) {
+const openWindow = (url) => {
+  return clients
+    .openWindow()
+    .then((windowClient) => {
+      console.log('[Service Worker]: Opened window', windowClient);
+      return windowClient;
+    })
+    .catch((error) => {
+      console.error('[Service Worker]: Error opening window', error);
+      throw new Error(error);
+    });
+};
+
+async function messageClient(event, messageType, data = {}) {
   console.log('[Service Worker]: Sending message to app', messageType);
 
   let message = {
     type: messageType,
+    data: data,
   };
 
   if (!event.clientId) {
@@ -135,7 +150,7 @@ self.addEventListener('push', (event) => {
 
   console.log('[Service Worker]: notificationData', notificationData);
 
-  const messageClientPromise = messageClient(event, 'NOTIFICATION_RECEIVED');
+  const messageClientPromise = messageClient(event, 'NOTIFICATION_RECEIVED', notificationData);
 
   const showNotificationPromise = self.registration.showNotification(
     notificationData.title,
@@ -161,25 +176,13 @@ self.addEventListener('notificationclick', (event) => {
     if (event.action == 'open_project_repo') {
       console.log('[Service Worker]: Performing action open_project_repo');
 
-      event.waitUntil(
-        clients
-          .openWindow(notificationData.data.project.github)
-          .then((windowClient) => {
-            console.log('[Service Worker]: Opened window', windowClient);
-          })
-      );
+      event.waitUntil(openWindow(notificationData.data.project.github));
 
       return;
     } else if (event.action == 'open_author_twitter') {
       console.log('[Service Worker]: Performing action open_author_twitter');
 
-      event.waitUntil(
-        clients
-          .openWindow(notificationData.data.author.twitter)
-          .then((windowClient) => {
-            console.log('[Service Worker]: Opened window', windowClient);
-          })
-      );
+      event.waitUntil(openWindow(notificationData.data.author.twitter));
 
       return;
     }
