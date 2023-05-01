@@ -20,8 +20,8 @@ export const notificationValidationSchema = yup.object({
   icon: yup
     .string('Enter notification icon url')
     .url('This should be a valid url'),
-  updateInAppCounter: yup.bool(),
-  updateIconBadgeCounter: yup.bool(),
+  //updateInAppCounter: yup.bool(),
+  //updateIconBadgeCounter: yup.bool(),
 });
 
 export const sendNotificationValidationSchema = yup.object().shape(
