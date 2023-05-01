@@ -73,6 +73,14 @@ export const defaultNotification = {
       action: 'open_project_repo',
       title: 'Show source code',
     },
+    {
+      action: 'open_author_twitter',
+      title: 'Author on Twitter',
+    },
+    {
+      action: 'open_author_linkedin',
+      title: 'Author on LinkedIn',
+    },
   ],
   body: 'Test notification body',
   dir: 'auto',
@@ -84,6 +92,20 @@ export const defaultNotification = {
   requireInteraction: 'true',
   tag: 'tag',
   vibrate: [300, 100, 400],
+  data: {
+    dateOfArrival: Date.now(),
+    updateInAppCounter: true,
+    updateBadgeCounter: true,
+    author: {
+      name: 'Maxim Salnikov',
+      github: 'https://github.com/webmaxru',
+      twitter: 'https://twitter.com/webmaxru',
+      linkedin: 'https://www.linkedin.com/in/webmax/',
+    },
+    project: {
+      github: 'https://github.com/webmaxru/push.foo',
+    },
+  },
 };
 
 export const buildNotification = (newValues) => {
@@ -96,5 +118,5 @@ export default {
   subscribe,
   unsubscribe,
   getExistingSubscription,
-  buildNotification
+  buildNotification,
 };

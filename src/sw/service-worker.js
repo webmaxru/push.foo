@@ -7,8 +7,8 @@ import { NetworkOnly } from 'workbox-strategies';
 import { googleFontsCache } from 'workbox-recipes';
 import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import * as googleAnalytics from 'workbox-google-analytics';
-import {offlineFallback} from 'workbox-recipes';
-
+import { offlineFallback } from 'workbox-recipes';
+import { NetworkOnly } from 'workbox-strategies';
 
 async function messageClient(event, messageType) {
   console.log('[Service Worker]: Sending message to app', messageType);
@@ -66,6 +66,7 @@ registerRoute(navigationRoute); */
 
 // OFFLINE FALLBACK
 
+setDefaultHandler(new NetworkOnly());
 offlineFallback();
 
 // STATIC RESOURCES
@@ -141,7 +142,10 @@ self.addEventListener('push', (event) => {
     notificationData.title,
     notificationData
   );
-  const promiseChain = Promise.all([messageClientPromise,showNotificationPromise]);
+  const promiseChain = Promise.all([
+    messageClientPromise,
+    showNotificationPromise,
+  ]);
 
   event.waitUntil(promiseChain);
 });
@@ -152,34 +156,56 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  if (event.action == 'open_project_repo') {
-    console.log('[Service Worker]: Performing action open_project_repo');
+  try {
+    notificationData = event.data.json();
 
-    event.waitUntil(
-      clients.openWindow('https://github.com/webmaxru/push.foo').then( (windowClient) => {
-        console.log('[Service Worker]: Opened window', windowClient);
-      })
-    );
-  } else {
-    console.log('[Service Worker]: Performing default click action');
+    if (event.action == 'open_project_repo') {
+      console.log('[Service Worker]: Performing action open_project_repo');
 
-    // This looks to see if the current is already open and
-    // focuses if it is
-    event.waitUntil(
-      clients
-        .matchAll({
-          includeUncontrolled: true,
-          type: 'window',
-        })
-        .then(function (clientList) {
-          for (var i = 0; i < clientList.length; i++) {
-            var client = clientList[i];
-            if (client.url == '/' && 'focus' in client) return client.focus();
-          }
-          if (clients.openWindow) return clients.openWindow('/');
-        })
-    );
+      event.waitUntil(
+        clients
+          .openWindow(notificationData.data.project.github)
+          .then((windowClient) => {
+            console.log('[Service Worker]: Opened window', windowClient);
+          })
+      );
+
+      return;
+    } else if (event.action == 'open_author_twitter') {
+      console.log('[Service Worker]: Performing action open_author_twitter');
+
+      event.waitUntil(
+        clients
+          .openWindow(notificationData.data.author.twitter)
+          .then((windowClient) => {
+            console.log('[Service Worker]: Opened window', windowClient);
+          })
+      );
+
+      return;
+    }
+  } catch (error) {
+    console.error('[Service Worker]: Error parsing notification data', error);
   }
+
+  console.log('[Service Worker]: Performing default click action');
+
+  // This looks to see if the current is already open and
+  // focuses if it is
+  event.waitUntil(
+    clients
+      .matchAll({
+        includeUncontrolled: true,
+        type: 'window',
+      })
+      .then(function (clientList) {
+        for (var i = 0; i < clientList.length; i++) {
+          var client = clientList[i];
+          if (client.url == '/' && 'focus' in client) return client.focus();
+        }
+        if (clients.openWindow) return clients.openWindow('/');
+      })
+  );
 });
 
 // Closing notification action
