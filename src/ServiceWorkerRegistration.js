@@ -3,19 +3,23 @@ import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import {
-  increment,
-  selectNotificationCount,
+  incrementInAppCount,
+  incrementIconBadgeCount,
+  selectNotificationIconBadgeCount,
 } from '../store/notificationCountSlice';
 
 export default function ServiceWorkerRegistration(props) {
   const dispatch = useDispatch();
-  const notificationCount = useSelector(selectNotificationCount);
+  const notificationIconBadgeCount = useSelector(
+    selectNotificationIconBadgeCount
+  );
 
   useEffect(() => {
-    console.log('[App] notificationCount', notificationCount);
+    console.log('[App] notificationIconBadgeCount', notificationIconBadgeCount);
+
     if ('setAppBadge' in navigator) {
       navigator
-        .setAppBadge(notificationCount)
+        .setAppBadge(notificationIconBadgeCount)
         .then(() => {
           console.log('[App] The app badge was updated');
         })
@@ -23,7 +27,7 @@ export default function ServiceWorkerRegistration(props) {
           console.error('[App] Error updating the app badge', error);
         });
     }
-  }, [notificationCount]);
+  }, [notificationIconBadgeCount]);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -72,8 +76,15 @@ export default function ServiceWorkerRegistration(props) {
           );
         }
         if (event.data.type === 'NOTIFICATION_RECEIVED') {
-          console.log('[App] Incrementing app title bar icon badge');
-          dispatch(increment());
+          console.log('[App] Incrementing notification counters');
+          if (event.data.data?.updateInAppCounter) {
+            console.log('[App] Incrementing in-app counter');
+            dispatch(incrementInAppCount());
+          }
+          if (event.data.data?.updateIconBadgeCounter) {
+            console.log('[App] Incrementing icon badge counter');
+            dispatch(incrementIconBadgeCount());
+          }
         }
       });
 

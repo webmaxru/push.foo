@@ -464,11 +464,243 @@
             return api;
         })());
 
+    /*
+      Copyright 2020 Google LLC
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * A utility method that makes it easier to use `event.waitUntil` with
+     * async functions and return the result.
+     *
+     * @param {ExtendableEvent} event
+     * @param {Function} asyncFn
+     * @return {Function}
+     * @private
+     */
+    function waitUntil(event, asyncFn) {
+        const returnPromise = asyncFn();
+        event.waitUntil(returnPromise);
+        return returnPromise;
+    }
+
     // @ts-ignore
     try {
         self['workbox:precaching:6.5.3'] && _();
     }
     catch (e) { }
+
+    /*
+      Copyright 2018 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    // Name of the search parameter used to store revision info.
+    const REVISION_SEARCH_PARAM = '__WB_REVISION__';
+    /**
+     * Converts a manifest entry into a versioned URL suitable for precaching.
+     *
+     * @param {Object|string} entry
+     * @return {string} A URL with versioning info.
+     *
+     * @private
+     * @memberof workbox-precaching
+     */
+    function createCacheKey(entry) {
+        if (!entry) {
+            throw new WorkboxError('add-to-cache-list-unexpected-type', { entry });
+        }
+        // If a precache manifest entry is a string, it's assumed to be a versioned
+        // URL, like '/app.abcd1234.js'. Return as-is.
+        if (typeof entry === 'string') {
+            const urlObject = new URL(entry, location.href);
+            return {
+                cacheKey: urlObject.href,
+                url: urlObject.href,
+            };
+        }
+        const { revision, url } = entry;
+        if (!url) {
+            throw new WorkboxError('add-to-cache-list-unexpected-type', { entry });
+        }
+        // If there's just a URL and no revision, then it's also assumed to be a
+        // versioned URL.
+        if (!revision) {
+            const urlObject = new URL(url, location.href);
+            return {
+                cacheKey: urlObject.href,
+                url: urlObject.href,
+            };
+        }
+        // Otherwise, construct a properly versioned URL using the custom Workbox
+        // search parameter along with the revision info.
+        const cacheKeyURL = new URL(url, location.href);
+        const originalURL = new URL(url, location.href);
+        cacheKeyURL.searchParams.set(REVISION_SEARCH_PARAM, revision);
+        return {
+            cacheKey: cacheKeyURL.href,
+            url: originalURL.href,
+        };
+    }
+
+    /*
+      Copyright 2020 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * A plugin, designed to be used with PrecacheController, to determine the
+     * of assets that were updated (or not updated) during the install event.
+     *
+     * @private
+     */
+    class PrecacheInstallReportPlugin {
+        constructor() {
+            this.updatedURLs = [];
+            this.notUpdatedURLs = [];
+            this.handlerWillStart = async ({ request, state, }) => {
+                // TODO: `state` should never be undefined...
+                if (state) {
+                    state.originalRequest = request;
+                }
+            };
+            this.cachedResponseWillBeUsed = async ({ event, state, cachedResponse, }) => {
+                if (event.type === 'install') {
+                    if (state &&
+                        state.originalRequest &&
+                        state.originalRequest instanceof Request) {
+                        // TODO: `state` should never be undefined...
+                        const url = state.originalRequest.url;
+                        if (cachedResponse) {
+                            this.notUpdatedURLs.push(url);
+                        }
+                        else {
+                            this.updatedURLs.push(url);
+                        }
+                    }
+                }
+                return cachedResponse;
+            };
+        }
+    }
+
+    /*
+      Copyright 2020 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * A plugin, designed to be used with PrecacheController, to translate URLs into
+     * the corresponding cache key, based on the current revision info.
+     *
+     * @private
+     */
+    class PrecacheCacheKeyPlugin {
+        constructor({ precacheController }) {
+            this.cacheKeyWillBeUsed = async ({ request, params, }) => {
+                // Params is type any, can't change right now.
+                /* eslint-disable */
+                const cacheKey = (params === null || params === void 0 ? void 0 : params.cacheKey) ||
+                    this._precacheController.getCacheKeyForURL(request.url);
+                /* eslint-enable */
+                return cacheKey
+                    ? new Request(cacheKey, { headers: request.headers })
+                    : request;
+            };
+            this._precacheController = precacheController;
+        }
+    }
+
+    /*
+      Copyright 2018 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * @param {string} groupTitle
+     * @param {Array<string>} deletedURLs
+     *
+     * @private
+     */
+    const logGroup = (groupTitle, deletedURLs) => {
+        logger.groupCollapsed(groupTitle);
+        for (const url of deletedURLs) {
+            logger.log(url);
+        }
+        logger.groupEnd();
+    };
+    /**
+     * @param {Array<string>} deletedURLs
+     *
+     * @private
+     * @memberof workbox-precaching
+     */
+    function printCleanupDetails(deletedURLs) {
+        const deletionCount = deletedURLs.length;
+        if (deletionCount > 0) {
+            logger.groupCollapsed(`During precaching cleanup, ` +
+                `${deletionCount} cached ` +
+                `request${deletionCount === 1 ? ' was' : 's were'} deleted.`);
+            logGroup('Deleted Cache Requests', deletedURLs);
+            logger.groupEnd();
+        }
+    }
+
+    /*
+      Copyright 2018 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * @param {string} groupTitle
+     * @param {Array<string>} urls
+     *
+     * @private
+     */
+    function _nestedGroup(groupTitle, urls) {
+        if (urls.length === 0) {
+            return;
+        }
+        logger.groupCollapsed(groupTitle);
+        for (const url of urls) {
+            logger.log(url);
+        }
+        logger.groupEnd();
+    }
+    /**
+     * @param {Array<string>} urlsToPrecache
+     * @param {Array<string>} urlsAlreadyPrecached
+     *
+     * @private
+     * @memberof workbox-precaching
+     */
+    function printInstallDetails(urlsToPrecache, urlsAlreadyPrecached) {
+        const precachedCount = urlsToPrecache.length;
+        const alreadyPrecachedCount = urlsAlreadyPrecached.length;
+        if (precachedCount || alreadyPrecachedCount) {
+            let message = `Precaching ${precachedCount} file${precachedCount === 1 ? '' : 's'}.`;
+            if (alreadyPrecachedCount > 0) {
+                message +=
+                    ` ${alreadyPrecachedCount} ` +
+                        `file${alreadyPrecachedCount === 1 ? ' is' : 's are'} already cached.`;
+            }
+            logger.groupCollapsed(message);
+            _nestedGroup(`View newly precached URLs.`, urlsToPrecache);
+            _nestedGroup(`View previously precached URLs.`, urlsAlreadyPrecached);
+            logger.groupEnd();
+        }
+    }
 
     /*
       Copyright 2019 Google LLC
@@ -1654,6 +1886,300 @@
         },
     };
 
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Performs efficient precaching of assets.
+     *
+     * @memberof workbox-precaching
+     */
+    class PrecacheController {
+        /**
+         * Create a new PrecacheController.
+         *
+         * @param {Object} [options]
+         * @param {string} [options.cacheName] The cache to use for precaching.
+         * @param {string} [options.plugins] Plugins to use when precaching as well
+         * as responding to fetch events for precached assets.
+         * @param {boolean} [options.fallbackToNetwork=true] Whether to attempt to
+         * get the response from the network if there's a precache miss.
+         */
+        constructor({ cacheName, plugins = [], fallbackToNetwork = true, } = {}) {
+            this._urlsToCacheKeys = new Map();
+            this._urlsToCacheModes = new Map();
+            this._cacheKeysToIntegrities = new Map();
+            this._strategy = new PrecacheStrategy({
+                cacheName: cacheNames.getPrecacheName(cacheName),
+                plugins: [
+                    ...plugins,
+                    new PrecacheCacheKeyPlugin({ precacheController: this }),
+                ],
+                fallbackToNetwork,
+            });
+            // Bind the install and activate methods to the instance.
+            this.install = this.install.bind(this);
+            this.activate = this.activate.bind(this);
+        }
+        /**
+         * @type {workbox-precaching.PrecacheStrategy} The strategy created by this controller and
+         * used to cache assets and respond to fetch events.
+         */
+        get strategy() {
+            return this._strategy;
+        }
+        /**
+         * Adds items to the precache list, removing any duplicates and
+         * stores the files in the
+         * {@link workbox-core.cacheNames|"precache cache"} when the service
+         * worker installs.
+         *
+         * This method can be called multiple times.
+         *
+         * @param {Array<Object|string>} [entries=[]] Array of entries to precache.
+         */
+        precache(entries) {
+            this.addToCacheList(entries);
+            if (!this._installAndActiveListenersAdded) {
+                self.addEventListener('install', this.install);
+                self.addEventListener('activate', this.activate);
+                this._installAndActiveListenersAdded = true;
+            }
+        }
+        /**
+         * This method will add items to the precache list, removing duplicates
+         * and ensuring the information is valid.
+         *
+         * @param {Array<workbox-precaching.PrecacheController.PrecacheEntry|string>} entries
+         *     Array of entries to precache.
+         */
+        addToCacheList(entries) {
+            {
+                finalAssertExports.isArray(entries, {
+                    moduleName: 'workbox-precaching',
+                    className: 'PrecacheController',
+                    funcName: 'addToCacheList',
+                    paramName: 'entries',
+                });
+            }
+            const urlsToWarnAbout = [];
+            for (const entry of entries) {
+                // See https://github.com/GoogleChrome/workbox/issues/2259
+                if (typeof entry === 'string') {
+                    urlsToWarnAbout.push(entry);
+                }
+                else if (entry && entry.revision === undefined) {
+                    urlsToWarnAbout.push(entry.url);
+                }
+                const { cacheKey, url } = createCacheKey(entry);
+                const cacheMode = typeof entry !== 'string' && entry.revision ? 'reload' : 'default';
+                if (this._urlsToCacheKeys.has(url) &&
+                    this._urlsToCacheKeys.get(url) !== cacheKey) {
+                    throw new WorkboxError('add-to-cache-list-conflicting-entries', {
+                        firstEntry: this._urlsToCacheKeys.get(url),
+                        secondEntry: cacheKey,
+                    });
+                }
+                if (typeof entry !== 'string' && entry.integrity) {
+                    if (this._cacheKeysToIntegrities.has(cacheKey) &&
+                        this._cacheKeysToIntegrities.get(cacheKey) !== entry.integrity) {
+                        throw new WorkboxError('add-to-cache-list-conflicting-integrities', {
+                            url,
+                        });
+                    }
+                    this._cacheKeysToIntegrities.set(cacheKey, entry.integrity);
+                }
+                this._urlsToCacheKeys.set(url, cacheKey);
+                this._urlsToCacheModes.set(url, cacheMode);
+                if (urlsToWarnAbout.length > 0) {
+                    const warningMessage = `Workbox is precaching URLs without revision ` +
+                        `info: ${urlsToWarnAbout.join(', ')}\nThis is generally NOT safe. ` +
+                        `Learn more at https://bit.ly/wb-precache`;
+                    {
+                        logger.warn(warningMessage);
+                    }
+                }
+            }
+        }
+        /**
+         * Precaches new and updated assets. Call this method from the service worker
+         * install event.
+         *
+         * Note: this method calls `event.waitUntil()` for you, so you do not need
+         * to call it yourself in your event handlers.
+         *
+         * @param {ExtendableEvent} event
+         * @return {Promise<workbox-precaching.InstallResult>}
+         */
+        install(event) {
+            // waitUntil returns Promise<any>
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return waitUntil(event, async () => {
+                const installReportPlugin = new PrecacheInstallReportPlugin();
+                this.strategy.plugins.push(installReportPlugin);
+                // Cache entries one at a time.
+                // See https://github.com/GoogleChrome/workbox/issues/2528
+                for (const [url, cacheKey] of this._urlsToCacheKeys) {
+                    const integrity = this._cacheKeysToIntegrities.get(cacheKey);
+                    const cacheMode = this._urlsToCacheModes.get(url);
+                    const request = new Request(url, {
+                        integrity,
+                        cache: cacheMode,
+                        credentials: 'same-origin',
+                    });
+                    await Promise.all(this.strategy.handleAll({
+                        params: { cacheKey },
+                        request,
+                        event,
+                    }));
+                }
+                const { updatedURLs, notUpdatedURLs } = installReportPlugin;
+                {
+                    printInstallDetails(updatedURLs, notUpdatedURLs);
+                }
+                return { updatedURLs, notUpdatedURLs };
+            });
+        }
+        /**
+         * Deletes assets that are no longer present in the current precache manifest.
+         * Call this method from the service worker activate event.
+         *
+         * Note: this method calls `event.waitUntil()` for you, so you do not need
+         * to call it yourself in your event handlers.
+         *
+         * @param {ExtendableEvent} event
+         * @return {Promise<workbox-precaching.CleanupResult>}
+         */
+        activate(event) {
+            // waitUntil returns Promise<any>
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return waitUntil(event, async () => {
+                const cache = await self.caches.open(this.strategy.cacheName);
+                const currentlyCachedRequests = await cache.keys();
+                const expectedCacheKeys = new Set(this._urlsToCacheKeys.values());
+                const deletedURLs = [];
+                for (const request of currentlyCachedRequests) {
+                    if (!expectedCacheKeys.has(request.url)) {
+                        await cache.delete(request);
+                        deletedURLs.push(request.url);
+                    }
+                }
+                {
+                    printCleanupDetails(deletedURLs);
+                }
+                return { deletedURLs };
+            });
+        }
+        /**
+         * Returns a mapping of a precached URL to the corresponding cache key, taking
+         * into account the revision information for the URL.
+         *
+         * @return {Map<string, string>} A URL to cache key mapping.
+         */
+        getURLsToCacheKeys() {
+            return this._urlsToCacheKeys;
+        }
+        /**
+         * Returns a list of all the URLs that have been precached by the current
+         * service worker.
+         *
+         * @return {Array<string>} The precached URLs.
+         */
+        getCachedURLs() {
+            return [...this._urlsToCacheKeys.keys()];
+        }
+        /**
+         * Returns the cache key used for storing a given URL. If that URL is
+         * unversioned, like `/index.html', then the cache key will be the original
+         * URL with a search parameter appended to it.
+         *
+         * @param {string} url A URL whose cache key you want to look up.
+         * @return {string} The versioned URL that corresponds to a cache key
+         * for the original URL, or undefined if that URL isn't precached.
+         */
+        getCacheKeyForURL(url) {
+            const urlObject = new URL(url, location.href);
+            return this._urlsToCacheKeys.get(urlObject.href);
+        }
+        /**
+         * @param {string} url A cache key whose SRI you want to look up.
+         * @return {string} The subresource integrity associated with the cache key,
+         * or undefined if it's not set.
+         */
+        getIntegrityForCacheKey(cacheKey) {
+            return this._cacheKeysToIntegrities.get(cacheKey);
+        }
+        /**
+         * This acts as a drop-in replacement for
+         * [`cache.match()`](https://developer.mozilla.org/en-US/docs/Web/API/Cache/match)
+         * with the following differences:
+         *
+         * - It knows what the name of the precache is, and only checks in that cache.
+         * - It allows you to pass in an "original" URL without versioning parameters,
+         * and it will automatically look up the correct cache key for the currently
+         * active revision of that URL.
+         *
+         * E.g., `matchPrecache('index.html')` will find the correct precached
+         * response for the currently active service worker, even if the actual cache
+         * key is `'/index.html?__WB_REVISION__=1234abcd'`.
+         *
+         * @param {string|Request} request The key (without revisioning parameters)
+         * to look up in the precache.
+         * @return {Promise<Response|undefined>}
+         */
+        async matchPrecache(request) {
+            const url = request instanceof Request ? request.url : request;
+            const cacheKey = this.getCacheKeyForURL(url);
+            if (cacheKey) {
+                const cache = await self.caches.open(this.strategy.cacheName);
+                return cache.match(cacheKey);
+            }
+            return undefined;
+        }
+        /**
+         * Returns a function that looks up `url` in the precache (taking into
+         * account revision information), and returns the corresponding `Response`.
+         *
+         * @param {string} url The precached URL which will be used to lookup the
+         * `Response`.
+         * @return {workbox-routing~handlerCallback}
+         */
+        createHandlerBoundToURL(url) {
+            const cacheKey = this.getCacheKeyForURL(url);
+            if (!cacheKey) {
+                throw new WorkboxError('non-precached-url', { url });
+            }
+            return (options) => {
+                options.request = new Request(url);
+                options.params = Object.assign({ cacheKey }, options.params);
+                return this.strategy.handle(options);
+            };
+        }
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    let precacheController;
+    /**
+     * @return {PrecacheController}
+     * @private
+     */
+    const getOrCreatePrecacheController = () => {
+        if (!precacheController) {
+            precacheController = new PrecacheController();
+        }
+        return precacheController;
+    };
+
     // @ts-ignore
     try {
         self['workbox:routing:6.5.3'] && _();
@@ -2352,6 +2878,78 @@
         const defaultRouter = getOrCreateDefaultRouter();
         defaultRouter.registerRoute(route);
         return route;
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Helper function that calls
+     * {@link PrecacheController#matchPrecache} on the default
+     * {@link PrecacheController} instance.
+     *
+     * If you are creating your own {@link PrecacheController}, then call
+     * {@link PrecacheController#matchPrecache} on that instance,
+     * instead of using this function.
+     *
+     * @param {string|Request} request The key (without revisioning parameters)
+     * to look up in the precache.
+     * @return {Promise<Response|undefined>}
+     *
+     * @memberof workbox-precaching
+     */
+    function matchPrecache(request) {
+        const precacheController = getOrCreatePrecacheController();
+        return precacheController.matchPrecache(request);
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * If a Route throws an error while handling a request, this `handler`
+     * will be called and given a chance to provide a response.
+     *
+     * @param {workbox-routing~handlerCallback} handler A callback
+     * function that returns a Promise resulting in a Response.
+     *
+     * @memberof workbox-routing
+     */
+    function setCatchHandler(handler) {
+        const defaultRouter = getOrCreateDefaultRouter();
+        defaultRouter.setCatchHandler(handler);
+    }
+
+    /*
+      Copyright 2019 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * Define a default `handler` that's called when no routes explicitly
+     * match the incoming request.
+     *
+     * Without a default handler, unmatched requests will go against the
+     * network as if there were no service worker present.
+     *
+     * @param {workbox-routing~handlerCallback} handler A callback
+     * function that returns a Promise resulting in a Response.
+     *
+     * @memberof workbox-routing
+     */
+    function setDefaultHandler(handler) {
+        const defaultRouter = getOrCreateDefaultRouter();
+        defaultRouter.setDefaultHandler(handler);
     }
 
     /*
@@ -4076,6 +4674,62 @@
         }));
     }
 
+    /*
+      Copyright 2020 Google LLC
+
+      Use of this source code is governed by an MIT-style
+      license that can be found in the LICENSE file or at
+      https://opensource.org/licenses/MIT.
+    */
+    /**
+     * An implementation of the [comprehensive fallbacks recipe]{@link https://developers.google.com/web/tools/workbox/guides/advanced-recipes#comprehensive_fallbacks}. Be sure to include the fallbacks in your precache injection
+     *
+     * @memberof workbox-recipes
+     *
+     * @param {Object} [options]
+     * @param {string} [options.pageFallback] Precache name to match for pag fallbacks. Defaults to offline.html
+     * @param {string} [options.imageFallback] Precache name to match for image fallbacks.
+     * @param {string} [options.fontFallback] Precache name to match for font fallbacks.
+     */
+    function offlineFallback(options = {}) {
+        const pageFallback = options.pageFallback || 'offline.html';
+        const imageFallback = options.imageFallback || false;
+        const fontFallback = options.fontFallback || false;
+        self.addEventListener('install', (event) => {
+            const files = [pageFallback];
+            if (imageFallback) {
+                files.push(imageFallback);
+            }
+            if (fontFallback) {
+                files.push(fontFallback);
+            }
+            event.waitUntil(self.caches
+                .open('workbox-offline-fallbacks')
+                .then((cache) => cache.addAll(files)));
+        });
+        const handler = async (options) => {
+            const dest = options.request.destination;
+            const cache = await self.caches.open('workbox-offline-fallbacks');
+            if (dest === 'document') {
+                const match = (await matchPrecache(pageFallback)) ||
+                    (await cache.match(pageFallback));
+                return match || Response.error();
+            }
+            if (dest === 'image' && imageFallback !== false) {
+                const match = (await matchPrecache(imageFallback)) ||
+                    (await cache.match(imageFallback));
+                return match || Response.error();
+            }
+            if (dest === 'font' && fontFallback !== false) {
+                const match = (await matchPrecache(fontFallback)) ||
+                    (await cache.match(fontFallback));
+                return match || Response.error();
+            }
+            return Response.error();
+        };
+        setCatchHandler(handler);
+    }
+
     // @ts-ignore
     try {
         self['workbox:background-sync:6.5.3'] && _();
@@ -5117,11 +5771,25 @@
 
     /* eslint-disable no-undef */
 
-    async function messageClient(event, messageType) {
+    const openWindow = (url) => {
+      return clients
+        .openWindow()
+        .then((windowClient) => {
+          console.log('[Service Worker]: Opened window', windowClient);
+          return windowClient;
+        })
+        .catch((error) => {
+          console.error('[Service Worker]: Error opening window', error);
+          throw new Error(error);
+        });
+    };
+
+    async function messageClient(event, messageType, data = {}) {
       console.log('[Service Worker]: Sending message to app', messageType);
 
       let message = {
         type: messageType,
+        data: data,
       };
 
       if (!event.clientId) {
@@ -5150,7 +5818,7 @@
     // PRECACHING
 
     // Precache and serve resources from __WB_MANIFEST array
-    //precacheAndRoute([{"revision":"5e49ceec735076545c43a42023673a08","url":"favicon.ico"},{"revision":"f3d14dcc0cc9678a481dc1effda6c3be","url":"index.html"},{"revision":"bf34137b8c5207082afa9d9e40778f0a","url":"_next/static/chunks/249.9539d3227f707a06.js"},{"revision":"a7f5a2c1beab7f0d18f8f91778dea5c6","url":"_next/static/chunks/398-3b9655154a811b96.js"},{"revision":"72282fa510f9672342a4920c87138fda","url":"_next/static/chunks/698.579de868933f6525.js"},{"revision":"7fc4bed6b4319c62343f0bf5db91a5bb","url":"_next/static/chunks/framework-2c79e2a64abdb08b.js"},{"revision":"59ee4e6b9145b7cfad22a699992a9c0e","url":"_next/static/chunks/main-e08595bab467e2ee.js"},{"revision":"e73432f52bbdf45dcb6ab17df188249d","url":"_next/static/chunks/pages/_app-227454e8b81d306d.js"},{"revision":"5d775f6869b7fdb87782f5583813d82f","url":"_next/static/chunks/pages/_error-d58ae9a7c440bd1b.js"},{"revision":"9ad6d6f21ee66d9c4afc7bf1875cd448","url":"_next/static/chunks/pages/about-37313ffdff9d1cf8.js"},{"revision":"5c2365ad5ccd52d694a41bcb4e125e21","url":"_next/static/chunks/pages/index-a4039d69f88d37c2.js"},{"revision":"0777c7c6aad25fabdd740580ab0532cc","url":"_next/static/chunks/pages/resources-4f256b26b69d30bf.js"},{"revision":"837c0df77fd5009c9e46d446188ecfd0","url":"_next/static/chunks/polyfills-c67a75d1b6f99dc8.js"},{"revision":"91ed5578ef261ae64ae5ebdfd8f536b8","url":"_next/static/chunks/webpack-62f79902c2bab45c.js"},{"revision":"57521137956fab0cb9f778b0c7d89cc2","url":"_next/static/css/045b542141e6f027.css"},{"revision":"785b4d1a9ce702cbda3edbb3ea17a89c","url":"_next/static/mCklkgvuvsDE1hEDajYbI/_buildManifest.js"},{"revision":"b6652df95db52feb4daf4eca35380933","url":"_next/static/mCklkgvuvsDE1hEDajYbI/_ssgManifest.js"},{"revision":"389fa3a75c10642c314955d82c22454e","url":"app.webmanifest"}]);
+    //precacheAndRoute([{"revision":"5e49ceec735076545c43a42023673a08","url":"favicon.ico"},{"revision":"f262bd0f103e735efdcd927b85f5ab75","url":"index.html"},{"revision":"bb0e996df492dbf809a89daa483ec4ef","url":"_next/static/chunks/172-ebde81772bc4857e.js"},{"revision":"bf34137b8c5207082afa9d9e40778f0a","url":"_next/static/chunks/249.9539d3227f707a06.js"},{"revision":"72282fa510f9672342a4920c87138fda","url":"_next/static/chunks/698.579de868933f6525.js"},{"revision":"7fc4bed6b4319c62343f0bf5db91a5bb","url":"_next/static/chunks/framework-2c79e2a64abdb08b.js"},{"revision":"9605f316957f028542c36851cd811fcc","url":"_next/static/chunks/main-eecd6bbd5ab0257d.js"},{"revision":"4fa143544bc9ea57ab020551611d1006","url":"_next/static/chunks/pages/_app-25926ec0d132990b.js"},{"revision":"5d775f6869b7fdb87782f5583813d82f","url":"_next/static/chunks/pages/_error-d58ae9a7c440bd1b.js"},{"revision":"f5fb8168668ac8d2a88ea81fcec3d574","url":"_next/static/chunks/pages/404-150ebd79583c82f5.js"},{"revision":"1335a7aba4df1a9aa725d216845c2f26","url":"_next/static/chunks/pages/about-ec0dc2839ac91ed4.js"},{"revision":"87154586ed2da6d378b7c798e3167279","url":"_next/static/chunks/pages/index-b8d6a9935d20ad11.js"},{"revision":"51b1973facd306e9bdbe18e843ae6614","url":"_next/static/chunks/pages/offline-13dfafb1c747731d.js"},{"revision":"10d08e0c07f0e1b52ffd9244f182c933","url":"_next/static/chunks/pages/resources-448fdadd753b4866.js"},{"revision":"837c0df77fd5009c9e46d446188ecfd0","url":"_next/static/chunks/polyfills-c67a75d1b6f99dc8.js"},{"revision":"91ed5578ef261ae64ae5ebdfd8f536b8","url":"_next/static/chunks/webpack-62f79902c2bab45c.js"},{"revision":"57521137956fab0cb9f778b0c7d89cc2","url":"_next/static/css/045b542141e6f027.css"},{"revision":"943b408294e3ce88fdf0fae6f47510e3","url":"_next/static/KBgb7DyVyPg72eF2SaxhG/_buildManifest.js"},{"revision":"b6652df95db52feb4daf4eca35380933","url":"_next/static/KBgb7DyVyPg72eF2SaxhG/_ssgManifest.js"},{"revision":"adcc0281203830dac2d58e3d112190a7","url":"app.webmanifest"}]);
 
     // NAVIGATION ROUTING
 
@@ -5170,6 +5838,11 @@
       ], // Also might be specified explicitly via allowlist
     });
     registerRoute(navigationRoute); */
+
+    // OFFLINE FALLBACK
+
+    setDefaultHandler(new NetworkOnly());
+    offlineFallback();
 
     // STATIC RESOURCES
 
@@ -5238,13 +5911,16 @@
 
       console.log('[Service Worker]: notificationData', notificationData);
 
-      const messageClientPromise = messageClient(event, 'NOTIFICATION_RECEIVED');
+      const messageClientPromise = messageClient(event, 'NOTIFICATION_RECEIVED', notificationData);
 
       const showNotificationPromise = self.registration.showNotification(
         notificationData.title,
         notificationData
       );
-      const promiseChain = Promise.all([messageClientPromise,showNotificationPromise]);
+      const promiseChain = Promise.all([
+        messageClientPromise,
+        showNotificationPromise,
+      ]);
 
       event.waitUntil(promiseChain);
     });
@@ -5255,39 +5931,49 @@
 
       event.notification.close();
 
-      if (event.action == 'open_project_repo') {
-        console.log('[Service Worker]: Performing action open_project_repo');
+      try {
+        notificationData = event.data.json();
 
-        event.waitUntil(
-          clients.openWindow('https://github.com/webmaxru/push.foo').then( (windowClient) => {
-            console.log('[Service Worker]: Opened window', windowClient);
-          })
-        );
-      } else {
-        console.log('[Service Worker]: Performing default click action');
+        if (event.action == 'open_project_repo') {
+          console.log('[Service Worker]: Performing action open_project_repo');
 
-        // This looks to see if the current is already open and
-        // focuses if it is
-        event.waitUntil(
-          clients
-            .matchAll({
-              includeUncontrolled: true,
-              type: 'window',
-            })
-            .then(function (clientList) {
-              for (var i = 0; i < clientList.length; i++) {
-                var client = clientList[i];
-                if (client.url == '/' && 'focus' in client) return client.focus();
-              }
-              if (clients.openWindow) return clients.openWindow('/');
-            })
-        );
+          event.waitUntil(openWindow(notificationData.data.project.github));
+
+          return;
+        } else if (event.action == 'open_author_twitter') {
+          console.log('[Service Worker]: Performing action open_author_twitter');
+
+          event.waitUntil(openWindow(notificationData.data.author.twitter));
+
+          return;
+        }
+      } catch (error) {
+        console.error('[Service Worker]: Error parsing notification data', error);
       }
+
+      console.log('[Service Worker]: Performing default click action');
+
+      // This looks to see if the current is already open and
+      // focuses if it is
+      event.waitUntil(
+        clients
+          .matchAll({
+            includeUncontrolled: true,
+            type: 'window',
+          })
+          .then(function (clientList) {
+            for (var i = 0; i < clientList.length; i++) {
+              var client = clientList[i];
+              if (client.url == '/' && 'focus' in client) return client.focus();
+            }
+            if (clients.openWindow) return clients.openWindow('/');
+          })
+      );
     });
 
     // Closing notification action
     self.addEventListener('notificationclose', (event) => {
-      log('[Service Worker]: Received notificationclose event');
+      console.log('[Service Worker]: Received notificationclose event');
     });
 
     initialize();

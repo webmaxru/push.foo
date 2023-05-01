@@ -1,7 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  selectNotificationCount,
-  reset,
+  resetInAppCount,
+  resetIconBadgeCount,
+  selectNotificationInAppCount,
 } from '../store/notificationCountSlice';
 
 import IconButton from '@mui/material/IconButton';
@@ -10,14 +11,15 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const NotificationCount = (props) => {
   const dispatch = useDispatch();
-  const notificationCount = useSelector(selectNotificationCount);
+  const notificationInAppCount = useSelector(selectNotificationInAppCount);
 
   const resetNotificationCount = () => {
-    dispatch(reset());
+    dispatch(resetInAppCount());
+    dispatch(resetIconBadgeCount());
 
     if ('setAppBadge' in navigator) {
       navigator
-        .clearAppBadge(notificationCount)
+        .clearAppBadge()
         .then(() => {
           console.log('[App] The app badge was removed');
         })
@@ -33,7 +35,7 @@ const NotificationCount = (props) => {
       onClick={resetNotificationCount}
       title="Click to reset notification count"
     >
-      <Badge badgeContent={notificationCount} color="secondary">
+      <Badge badgeContent={notificationInAppCount} color="secondary">
         <NotificationsIcon />
       </Badge>
     </IconButton>
