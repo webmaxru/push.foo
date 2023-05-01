@@ -26,7 +26,7 @@ export const notificationCountSlice = createSlice({
 
 export const {
   incrementInAppCount,
-  setIconBadgeCount,
+  resetInAppCount,
   incrementIconBadgeCount,
   resetIconBadgeCount,
 } = notificationCountSlice.actions;

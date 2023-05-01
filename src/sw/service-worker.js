@@ -80,8 +80,8 @@ registerRoute(navigationRoute); */
 
 // OFFLINE FALLBACK
 
-//setDefaultHandler(new NetworkOnly());
-//offlineFallback();
+setDefaultHandler(new NetworkOnly());
+offlineFallback();
 
 // STATIC RESOURCES
 
