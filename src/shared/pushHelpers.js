@@ -95,7 +95,7 @@ export const defaultNotification = {
   data: {
     dateOfArrival: Date.now(),
     updateInAppCounter: true,
-    updateBadgeCounter: true,
+    updateIconBadgeCounter: true,
     author: {
       name: 'Maxim Salnikov',
       github: 'https://github.com/webmaxru',

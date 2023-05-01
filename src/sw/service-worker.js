@@ -8,7 +8,6 @@ import { googleFontsCache } from 'workbox-recipes';
 import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import * as googleAnalytics from 'workbox-google-analytics';
 import { offlineFallback } from 'workbox-recipes';
-import { NetworkOnly } from 'workbox-strategies';
 
 async function messageClient(event, messageType) {
   console.log('[Service Worker]: Sending message to app', messageType);

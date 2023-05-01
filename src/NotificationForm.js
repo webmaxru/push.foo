@@ -2,9 +2,10 @@ import * as React from 'react';
 import Typography from '@mui/material/Typography';
 
 import TextField from '@mui/material/TextField';
-
+import FormControlLabel from '@mui/material/FormControlLabel';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import Switch from '@mui/material/Switch';
 export default function NotificationForm(props) {
   const notificationFormik = props.notificationFormik;
 
@@ -99,6 +100,26 @@ export default function NotificationForm(props) {
               }
               size="small"
               sx={{ mb: 2 }}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  name="updateInAppCounter"
+                  checked={notificationFormik.values.data.updateInAppCounter}
+                  onChange={notificationFormik.handleChange}
+                />
+              }
+              label="Update in-app counter"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  name="updateIconBadgeCounter"
+                  checked={notificationFormik.values.data.updateIconBadgeCounter}
+                  onChange={notificationFormik.handleChange}
+                />
+              }
+              label="Update icon badge counter"
             />
           </form>
 
