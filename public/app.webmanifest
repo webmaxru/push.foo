@@ -24,18 +24,17 @@
   ],
   "launch_handler": {
     "route_to": "existing-client",
-    "navigate_existing_client": "always"
+    "client_mode": "navigate-new"
   },
+  "scope_extensions": [
+    {
+      "origin": "https://push-out.bpmtech.no"
+    }
+  ],
   "protocol_handlers": [
     {
       "protocol": "web+push",
       "url": "?utm_source=protocol&push=%s"
-    }
-  ],
-  "capture_links": "existing-client-navigate",
-  "url_handlers": [
-    {
-      "origin": "https://push.foo"
     }
   ],
   "share_target": {

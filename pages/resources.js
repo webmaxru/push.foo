@@ -91,7 +91,7 @@ export default function About() {
             Presentations
             <ul>
               <li>
-              Web Push Notifications Done Right <Link href="https://www.slideshare.net/webmaxru/web-push-notifications-done-right">Slides</Link> - <Link href="https://youtu.be/yAKV8J9HrQI">Video</Link>
+              Web Push Notifications Done Right [<Link href="https://www.slideshare.net/webmaxru/web-push-notifications-done-right">Slides</Link>, <Link href="https://youtu.be/yAKV8J9HrQI">Video</Link>]
               </li>
             </ul>
           </li>
