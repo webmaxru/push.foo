@@ -47,6 +47,8 @@ import { useFormik } from 'formik';
 import ProTip from '../src/ProTip';
 import NotificationForm from '../src/NotificationForm';
 
+import { isIOS } from 'react-device-detect';
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -397,8 +399,8 @@ export default function Subscription(props) {
                 sx={{ mb: 2 }}
                 color="warning.main"
               >
-                If nothing happens, click again and/or look at the icon in the address bar - you
-                might need to allow notifications there
+                If nothing happens, click again and/or look at the icon in the
+                address bar - you might need to allow notifications there
               </Typography>
 
               <Button
@@ -428,9 +430,9 @@ export default function Subscription(props) {
             </>
           ) : (
             <Typography variant="body1" gutterBottom color="error.main">
-              Web Push API is not available in your browser. On iOS 16.4+
-              devices, you have to "Add to Home Screen" first (in "Share" icon
-              menu).
+              {isIOS
+                ? 'To enable Web Push on iOS 16.4+ devices, you have to "Add to Home Screen" first (in "Share" icon menu) and then open the app from the home screen.'
+                : 'Oh, it looks like Web Push is not available in your browser.'}
             </Typography>
           )}
         </CardContent>
@@ -443,7 +445,8 @@ export default function Subscription(props) {
       </Typography>
 
       <Typography variant="body1" gutterBottom color="text.secondary">
-        Register multiple devices and/or browsers on this device and send notifications there
+        Register multiple devices and/or browsers on this device and send
+        notifications there
       </Typography>
 
       <Card variant="outlined" sx={{ mb: 2 }}>
@@ -517,8 +520,8 @@ export default function Subscription(props) {
             </Button>
             <Typography variant="caption" display="block" sx={{ mb: 2 }}>
               You can change some parameters of the notification in the form
-              below. Only notifications for your 10 latest device
-              registrations will be sent.
+              below. Only notifications for your 10 latest device registrations
+              will be sent.
             </Typography>
           </form>
         </CardContent>

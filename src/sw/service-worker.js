@@ -178,16 +178,22 @@ self.addEventListener('notificationclick', (event) => {
   try {
     let notification = event.notification;
 
-    if (event.action == 'open_project_repo') {
+    if (event.action == 'open_url') {
+      console.log('[Service Worker]: Performing action open_url');
+
+      event.waitUntil(clients.openWindow(notification.data.action.url));
+
+      return;
+    } else if (event.action == 'open_project_repo') {
       console.log('[Service Worker]: Performing action open_project_repo');
 
-      event.waitUntil(openWindow(notification.data.project.github));
+      event.waitUntil(clients.openWindow(notification.data.project.github));
 
       return;
     } else if (event.action == 'open_author_twitter') {
       console.log('[Service Worker]: Performing action open_author_twitter');
 
-      event.waitUntil(openWindow(notification.data.author.twitter));
+      event.waitUntil(clients.openWindow(notification.data.author.twitter));
 
       return;
     }

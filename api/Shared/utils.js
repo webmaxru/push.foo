@@ -27,11 +27,23 @@ const getEndpointHash = (s) => {
 };
 
 const defaultNotification = {
-  title: 'Push.Foo Notification Title',
+  title: 'Test Notification Title',
   actions: [
     {
       action: 'open_project_repo',
       title: 'Show source code',
+    },
+    {
+      action: 'open_author_twitter',
+      title: 'Author on Twitter',
+    },
+    {
+      action: 'open_author_linkedin',
+      title: 'Author on LinkedIn',
+    },
+    {
+      action: 'open_url',
+      title: 'Open custom URL',
     },
   ],
   body: 'Test notification body',
@@ -44,6 +56,23 @@ const defaultNotification = {
   requireInteraction: 'true',
   tag: 'tag',
   vibrate: [300, 100, 400],
+  data: {
+    dateOfArrival: Date.now(),
+    updateInAppCounter: true,
+    updateIconBadgeCounter: true,
+    author: {
+      name: 'Maxim Salnikov',
+      github: 'https://github.com/webmaxru',
+      twitter: 'https://twitter.com/webmaxru',
+      linkedin: 'https://www.linkedin.com/in/webmax/',
+    },
+    project: {
+      github: 'https://github.com/webmaxru/push.foo',
+    },
+    action: {
+      url: 'https://push.foo',
+    },
+  },
 };
 
 module.exports = {

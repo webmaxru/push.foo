@@ -81,6 +81,10 @@ export const defaultNotification = {
       action: 'open_author_linkedin',
       title: 'Author on LinkedIn',
     },
+    {
+      action: 'open_url',
+      title: 'Open custom URL',
+    },
   ],
   body: 'Test notification body',
   dir: 'auto',
@@ -104,6 +108,9 @@ export const defaultNotification = {
     },
     project: {
       github: 'https://github.com/webmaxru/push.foo',
+    },
+    action: {
+      url: 'https://push.foo',
     },
   },
 };
