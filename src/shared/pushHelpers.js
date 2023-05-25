@@ -96,7 +96,6 @@ export const defaultNotification = {
   requireInteraction: true,
   silent: false,
   tag: 'Custom tag',
-  vibrate: [300, 100, 400],
   timestamp: Date.now(),
   data: {
     dateOfArrival: Date.now(),

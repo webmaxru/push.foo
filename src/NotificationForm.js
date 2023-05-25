@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
+import FormHelperText from '@mui/material/FormHelperText';
 import RadioGroup from '@mui/material/RadioGroup';
 import Radio from '@mui/material/Radio';
 import Card from '@mui/material/Card';
@@ -37,7 +38,7 @@ export default function NotificationForm(props) {
             </Typography>
 
             <Typography variant="body2" gutterBottom>
-              A full list of the Notification API's{' '}
+              A full list (except deprecated) of the Notification API's{' '}
               <Link
                 color="secondary"
                 href="https://notifications.spec.whatwg.org/#object-members"
@@ -170,10 +171,6 @@ export default function NotificationForm(props) {
                   notificationFormik.touched.dir &&
                   Boolean(notificationFormik.errors.dir)
                 }
-                helperText={
-                  notificationFormik.touched.dir &&
-                  notificationFormik.errors.dir
-                }
                 size="small"
                 sx={{ mb: 2 }}
               >
@@ -181,9 +178,24 @@ export default function NotificationForm(props) {
                   value="auto"
                   control={<Radio />}
                   label="auto"
+                  style={{ display: 'inline-block' }}
                 />
-                <FormControlLabel value="ltr" control={<Radio />} label="ltr" />
-                <FormControlLabel value="rtl" control={<Radio />} label="rtl" />
+                <FormControlLabel
+                  value="ltr"
+                  control={<Radio />}
+                  label="ltr"
+                  style={{ display: 'inline-block' }}
+                />
+                <FormControlLabel
+                  value="rtl"
+                  control={<Radio />}
+                  label="rtl"
+                  style={{ display: 'inline-block' }}
+                />
+                <FormHelperText>
+                  {notificationFormik.touched.dir &&
+                    notificationFormik.errors.dir}
+                </FormHelperText>
               </RadioGroup>
             </FormControl>
 
@@ -223,25 +235,6 @@ export default function NotificationForm(props) {
               size="small"
               sx={{ mb: 2 }}
             />
-            <TextField
-              fullWidth
-              id="vibrate"
-              name="vibrate"
-              label="Vibrate (vibration pattern, deprecated)"
-              value={notificationFormik.values.vibrate}
-              onChange={notificationFormik.handleChange}
-              error={
-                notificationFormik.touched.vibrate &&
-                Boolean(notificationFormik.errors.vibrate)
-              }
-              helperText={
-                notificationFormik.touched.vibrate &&
-                notificationFormik.errors.vibrate
-              }
-              size="small"
-              sx={{ mb: 2 }}
-            />
-
             <FormControlLabel
               control={
                 <Switch
