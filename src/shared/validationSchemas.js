@@ -20,6 +20,10 @@ export const notificationValidationSchema = yup.object({
   icon: yup
     .string('Enter notification icon url')
     .url('This should be a valid url'),
+  badge: yup
+    .string('Enter notification badge url')
+    .url('This should be a valid url'),
+  requireInteraction: yup.bool(),
   //updateInAppCounter: yup.bool(),
   //updateIconBadgeCounter: yup.bool(),
 });
