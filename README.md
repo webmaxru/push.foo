@@ -56,3 +56,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 ### Author
 
 [Maxim Salnikov](https://twitter.com/webmaxru). Feel free to contact me if you have any questions about the project, PWA, Web Push, etc.
+
+### License
+
+This project is licensed under the terms of the MIT license.
